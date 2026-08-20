@@ -32,6 +32,27 @@ Open `http://localhost:8080` in your browser to use the application.
 | `--data-dir` | `~/.local/share/com.tlycode.agent` | Database and data directory |
 | `--server` | — | Force server mode (not needed if binary is named `*server*`) |
 
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `TLYCODE_LMSTUDIO_URL` | `http://127.0.0.1:1234/v1` | OpenAI-compatible LM Studio endpoint used by the TlyCode Local Agent, the model picker and the system check |
+
+The TlyCode Local Agent runs inside the server process, so it reaches LM Studio
+over the server's own network. When the server does not share a loopback with LM
+Studio, point it at the right host:
+
+```bash
+# Server in a container, LM Studio on the host
+TLYCODE_LMSTUDIO_URL=http://host.docker.internal:1234/v1 ./tlycode-agent-server --port 8080
+
+# LM Studio on another machine (enable "Serve on Local Network" in LM Studio)
+TLYCODE_LMSTUDIO_URL=http://192.168.1.10:1234/v1 ./tlycode-agent-server --port 8080
+```
+
+Model management (load/unload/download) additionally needs the `lms` CLI on the
+same machine as the server, so it stays available only for a local LM Studio.
+
 ## Architecture
 
 The server binary is self-contained:
