@@ -45,6 +45,39 @@ Click the **Backlog** button to manage tickets that aren't on the board yet. Bac
 
 Click **Archived** to view and restore archived tickets. Archive also supports search and pagination. When a ticket is archived, its linked chat session is also archived.
 
+## Flow Manager
+
+Click **Flow manager** on the board toolbar to run a batch of tickets in a
+planned order.
+
+A **flow** is a list of named **steps**. Drag tickets from the board panel into
+a step, reorder them inside it, or drag them to another step. Steps run in
+order: the next one starts only once every ticket of the current one has
+finished.
+
+Each step decides how its tickets run:
+
+- **Sequential** — one ticket at a time, in the order you arranged them.
+  **Parallel** — all of them at once (optionally capped by *Max at once*).
+- **Own session** — every ticket runs in its own chat session.
+  **One session** — the whole step runs in a single shared chat session, so the
+  agent keeps the context of the previous tickets. Only available for a
+  sequential step, because one session handles one turn at a time.
+
+Use **Start**, **Stop** and **Reset** to control the run:
+
+- **Start** begins the flow, or resumes it after a Stop at the first unfinished
+  ticket.
+- **Stop** cancels the turns that are in flight and dispatches nothing more;
+  those tickets go back to waiting.
+- **Reset** puts every ticket back to waiting. The chat sessions and their
+  messages are kept, so the record of what the flow did stays in Chat.
+
+Every ticket and every step shows its state — waiting, working, done, failed or
+skipped (an archived or deleted ticket is skipped). A failed ticket stops the
+flow unless you turn that off for the flow. The flow never moves tickets
+between columns, so your board stays as you left it.
+
 ## Column Prompts
 
 In **Settings**, you can configure a prompt and skill for each column. When a ticket is moved to a column that has a prompt configured, the prompt is automatically sent to the ticket's linked chat session.

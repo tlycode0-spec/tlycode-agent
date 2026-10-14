@@ -50,12 +50,34 @@ Each request must include the `X-Project-Path` header so the server knows which 
 | `delete_ticket_attachment` | Delete an attachment |
 | `read_ticket_attachment` | Download an attachment (base64) |
 
+### Kanban Flows (15 tools)
+
+| Tool | Description |
+|---|---|
+| `list_kanban_flows` | List the project's flows with status and progress |
+| `get_kanban_flow` | One flow with its steps and the state of every ticket |
+| `create_kanban_flow` | Create an empty flow |
+| `update_kanban_flow` | Rename a flow, or change its description / stop-on-error |
+| `delete_kanban_flow` | Delete a flow (refused while it runs) |
+| `create_flow_step` | Add a step (sequential/parallel, own/shared session) |
+| `update_flow_step` | Rename a step or change how it runs |
+| `delete_flow_step` | Delete a step |
+| `reorder_flow_steps` | Set the order the steps run in |
+| `add_flow_items` | Put tickets into a step |
+| `move_flow_item` | Move a ticket inside a step or into another step |
+| `remove_flow_item` | Take a ticket out of a step |
+| `start_kanban_flow` | Start or resume the run |
+| `stop_kanban_flow` | Stop the run and cancel the turns in flight |
+| `reset_kanban_flow` | Put every ticket back to waiting |
+
+The update tools are partial: only the fields you pass change.
+
 ### Prompt Execution (2 tools)
 
 | Tool | Description |
 |---|---|
 | `send_prompt` | Send a prompt to a chat session with optional skill |
-| `run_ticket` | Run a ticket (sends description + system_prompt + skill to Claude) |
+| `run_ticket` | Run a ticket (sends description + system_prompt + skill/persona to the agent) |
 
 ### Skills (9 tools)
 
