@@ -31,6 +31,14 @@ This is how you combine an interval with an exact time: interval *every 30 minut
 
 A window that ends before it starts (e.g. 22:00–06:00) wraps past midnight. The weekday is evaluated at the moment the window opens, so a Monday window of 22:00–06:00 covers Monday 22:00 through Tuesday 06:00.
 
+### Missed runs
+
+**Catch up a missed run** is on by default. If nothing was running when a slot came up — the app was closed, the machine asleep — the task runs as soon as the scheduler is back, and the task row says how late it was. Without this a nightly task would never run at all: 3:00 passes while the machine sleeps, the morning reschedules it to 3:00 tomorrow, and so on.
+
+All slots missed in one stretch collapse into a **single** run, so a task that fires every minute never replays a backlog.
+
+A time window takes precedence: a slot is only caught up while the current time still falls inside the window. Switch catching up off for tasks that only make sense at their exact time.
+
 ### Preview
 
 As you edit the schedule, the dialog shows the **next 5 runs** along with the server's current time and UTC offset. Schedules are always evaluated in the server's timezone, not your browser's — in server mode these can differ.
@@ -55,7 +63,7 @@ The scheduler runs a background loop every 10 seconds and compares each enabled 
 3. Records the run and computes the next one
 4. Optionally sends a system notification
 
-Runs missed while the app was closed are **skipped**, not caught up — the task simply resumes at its next scheduled slot.
+A slot missed while nothing was ticking is caught up on the next loop pass (see **Missed runs** above) unless the task has catching up switched off, or its time window no longer allows it. Either way the task row records what happened to the slot.
 
 ## Managing Tasks
 

@@ -13,15 +13,18 @@ Each request must include the `X-Project-Path` header so the server knows which 
 
 ## Available Tools (60+)
 
-### Chat (6 tools)
+### Chat (9 tools)
 
 | Tool | Description |
 |---|---|
 | `list_chat_sessions` | List all chat sessions for the current project |
 | `create_chat_session` | Create a new chat session |
 | `get_chat_messages` | Get messages from a chat session |
-| `add_chat_message` | Add a message (role: user or assistant) |
+| `add_chat_message` | Add a message (role: user or assistant). A `user` message is also queued for that session's agent and delivered in the prompt of its next run — no run is started (use `send_prompt` for that); pass `deliver_to_agent: false` to only write it into the transcript |
 | `delete_chat_session` | Delete a chat session |
+| `archive_chat_session` | Archive a session or bring it back. The kanban cards linked to it follow by default (and leave any flow plans); `archive_linked_ticket: false` puts away only the conversation and leaves the card on the board |
+| `search_archived_chat_sessions` | Search archived sessions by title, by message content, or both (`in_title`, `in_messages`). Each hit reports `message_matches`, not the messages themselves; without a query it lists the archive |
+| `search_chat_messages` | Find the messages of one session containing a text and return a snippet around each match, not the whole message |
 | `rename_chat_session` | Rename a chat session |
 
 ### Kanban (12 tools)
@@ -30,8 +33,9 @@ Each request must include the `X-Project-Path` header so the server knows which 
 |---|---|
 | `get_kanban_board` | Get the board with all columns and tickets |
 | `create_kanban_ticket` | Create a new ticket (title, description, system_prompt, skill) |
-| `update_kanban_ticket` | Update ticket properties |
+| `update_kanban_ticket` | Update ticket properties, including the values of the project's custom fields (`custom_fields`; omit it and they stay as they are) |
 | `move_kanban_ticket` | Move a ticket to a different column/position |
+| `reorder_kanban_tickets` | Set the order of one column's cards in a single call |
 | `delete_kanban_ticket` | Delete a ticket |
 | `archive_kanban_ticket` | Archive or unarchive a ticket |
 | `set_ticket_backlog` | Move a ticket to/from backlog |

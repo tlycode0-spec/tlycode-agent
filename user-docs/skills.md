@@ -85,6 +85,24 @@ If you have a **column prompt** configured for one of those columns, moving the
 ticket there fires it — the cycle would then run alongside whatever that prompt
 starts. Use one or the other for a given column.
 
+## Backlog ordering (built-in)
+
+The built-in **Backlog ordering** skill rearranges the cards of one column by
+the priorities somebody keeps elsewhere — typically the Jira backlog ranking.
+
+Say which column to order ("sort my To Do by the backlog") and the skill:
+
+1. reads the board and the project's custom ticket fields, to find which field
+   holds the issue key,
+2. reads the backlog order (in Jira via a JQL query ending in `ORDER BY Rank`,
+   the order a human put the backlog in),
+3. writes the whole column's order in one call,
+4. reports the cards it could not match and the backlog issues with no card.
+
+Cards it cannot match are left alone below the ordered ones rather than guessed
+into place. The skill only rearranges — it never moves a card to another column
+or edits its text.
+
 ## Using Skills
 
 ### In Chat

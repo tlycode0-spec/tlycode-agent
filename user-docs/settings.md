@@ -42,6 +42,36 @@ A text that is added to the beginning of the first message in every new chat ses
 
 Configure a prompt and skill for each Kanban column. When a ticket is moved to a column with a configured prompt, the prompt is automatically sent to the ticket's linked chat session. This enables automated workflows — e.g., when a ticket moves to "In Progress", Claude automatically starts working on it.
 
+The switch in the section header turns the whole thing off. With it off, moving a ticket into a column sends nothing — the per-column settings are kept, so you can switch it back on later. Turning it off also means a card can be moved between columns while its agent is responding: that move is otherwise refused, because the column's prompt would land in a session mid-answer. The switch is per project and lives in `.tlycode-settings.json` (`column_prompts_enabled`); prompt profiles do not change it.
+
+## Kanban ▸ Custom Ticket Fields
+
+Extra fields every ticket in the project has, in the spirit of Jira's custom fields — a Jira ticket number, an estimate, whatever the project needs. Each field has a name and a switch:
+
+- **Name** — the label shown on the ticket and on the card. It can be renamed any time; the key underneath it (shown in grey next to the name) is fixed, because that is what the tickets' values are stored under.
+- **Value source** — where the value comes from: *I fill it in on the ticket* (the default), or one of the two numbers computed from the ticket's linked chat session, described below.
+- **Show on card** — with it on, the field's value appears as a small chip on the card in the board, so things like a ticket number no longer have to be squeezed into the card's title.
+
+Values of a manual field are filled in per ticket, in the ticket dialog. A field with no value shows no chip. Until you add a field, the board looks exactly as it did before — a project that wants plain cards keeps them plain.
+
+### Chips computed from the session
+
+Two value sources are not typed in at all — they are read off the linked session's latest turn:
+
+- **Tokens in session context** — how much the session has in its context, i.e. the input side of its last turn (new input + cache read + cache write). This is *not* the cumulative "Σ tokens" the chat shows: that one counts the whole history and is much larger. The last turn's output is not counted either — it only enters the context when the next request sends it back.
+- **Session hotness** — until when the session's prompt cache stays hot, as `until 14:32 (12 min)`, and `cold` once the window is over. Waking a cold session re-reads the whole context, so this is what tells you whether to pick the session up now or let it go.
+
+A computed field has no value to type in, so the ticket dialog does not offer it. A ticket with no linked session — or one whose agent reports no token usage — shows no computed chip.
+
+### Session chips
+
+Two thresholds in the same tab drive those chips:
+
+- **Hot cache (minutes)** — how long after the last turn the session counts as hot. No agent reports this (Claude has both a 5-minute and a 1-hour prompt cache), so the chip is only as honest as this number. Default 60.
+- **Warn above (tokens)** — the context size at which rotating the session pays off. Above it the token chip is highlighted; nothing is rotated automatically. Default 160000.
+
+Deleting a field does **not** erase the values stored on the tickets: add the field back and they reappear. The definitions live in `.tlycode-settings.json` (`ticket_fields`) in desktop mode, so they travel with the repository; in server mode they are stored per project in the database. Agents read them over MCP with `get_project_settings` and write values with `update_kanban_ticket`.
+
 ## Log Level
 
 Set the verbosity of debug logs:

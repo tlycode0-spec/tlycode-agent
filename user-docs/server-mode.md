@@ -36,7 +36,7 @@ Open `http://localhost:8080` in your browser to use the application.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `TLYCODE_LMSTUDIO_URL` | `http://127.0.0.1:1234/v1` | OpenAI-compatible LM Studio endpoint used by the TlyCode Local Agent, the model picker and the system check |
+| `TLYCODE_LMSTUDIO_URL` | `http://127.0.0.1:1234/v1` | Fallback OpenAI-compatible LM Studio endpoint for the TlyCode Local Agent, the model picker and the system check |
 
 The TlyCode Local Agent runs inside the server process, so it reaches LM Studio
 over the server's own network. When the server does not share a loopback with LM
@@ -50,8 +50,33 @@ TLYCODE_LMSTUDIO_URL=http://host.docker.internal:1234/v1 ./tlycode-agent-server 
 TLYCODE_LMSTUDIO_URL=http://192.168.1.10:1234/v1 ./tlycode-agent-server --port 8080
 ```
 
-Model management (load/unload/download) additionally needs the `lms` CLI on the
-same machine as the server, so it stays available only for a local LM Studio.
+### Per-project host and port
+
+**Settings → Agent** has a *Model host* and *Port* pair which takes precedence
+over `TLYCODE_LMSTUDIO_URL`. The env variable stays the deployment-wide
+fallback — useful for a container that should work before anyone opens the
+settings — while the fields are what an individual user reaches for.
+
+The host field is forgiving: a bare host (`spark.local`), `host:port` or a whole
+URL (`http://10.0.0.5:1234/v1`) all resolve. Empty fields mean `127.0.0.1:1234`.
+
+In server mode both values are per-user (`USER_SCOPED_KEYS`), so each member can
+point at their own machine, and an admin can pin them for a group under
+**Settings → Admin → Groups**.
+
+### What a remote endpoint cannot do
+
+Only the OpenAI-compatible HTTP API travels over the network. Model management
+(start server, load / unload, download) goes through the `lms` CLI, which drives
+LM Studio on the machine running tlycode and nothing else. With a non-loopback
+host configured:
+
+- the model picker lists what the remote server reports over `GET /v1/models`
+  (i.e. its *loaded* models) instead of what `lms ls` finds locally,
+- the `lms`-only controls are hidden, and models are loaded in LM Studio on that
+  host,
+- the system check still probes the env / default endpoint, because it runs
+  before a project — and therefore a per-project setting — is known.
 
 ## Architecture
 
