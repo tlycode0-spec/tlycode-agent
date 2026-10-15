@@ -33,7 +33,7 @@ Each request must include the `X-Project-Path` header so the server knows which 
 |---|---|
 | `get_kanban_board` | Get the board with all columns and tickets |
 | `create_kanban_ticket` | Create a new ticket (title, description, system_prompt, skill) |
-| `update_kanban_ticket` | Update ticket properties, including the values of the project's custom fields (`custom_fields`; omit it and they stay as they are) |
+| `update_kanban_ticket` | Update ticket properties, including its custom fields (`custom_fields`, an object of field name → text; a name the project does not define becomes a field of that ticket alone; omit the argument and the fields stay as they are) |
 | `move_kanban_ticket` | Move a ticket to a different column/position |
 | `reorder_kanban_tickets` | Set the order of one column's cards in a single call |
 | `delete_kanban_ticket` | Delete a ticket |

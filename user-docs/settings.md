@@ -54,6 +54,8 @@ Extra fields every ticket in the project has, in the spirit of Jira's custom fie
 
 Values of a manual field are filled in per ticket, in the ticket dialog. A field with no value shows no chip. Until you add a field, the board looks exactly as it did before — a project that wants plain cards keeps them plain.
 
+A field defined here is on **every** ticket of the project. For something only one ticket needs, skip this screen: the ticket dialog has its own **Add field**, and a field added there lives on that ticket alone, with its own switch for the card.
+
 ### Chips computed from the session
 
 Two value sources are not typed in at all — they are read off the linked session's latest turn:

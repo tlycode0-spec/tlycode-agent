@@ -48,7 +48,11 @@ The ticket dialog lets you edit all ticket properties:
 - **Description** — detailed description of the task (markdown supported)
 - **System Prompt** — a custom system prompt that will be sent to Claude when running this ticket
 - **Skill** — attach a skill to use as context when running the ticket
-- **Custom fields** — the project's own fields (Settings ▸ Kanban), e.g. a Jira ticket number; a field marked *Show on card* also appears as a chip on the card in the board. Fields computed from the linked session (see *Session chips* below) are not listed here — there is nothing to type in.
+- **Custom fields** — metadata on the ticket, e.g. a Jira ticket number. Two kinds sit side by side:
+  - fields the project defines for every ticket (Settings ▸ Kanban), listed with their configured name; whether they reach the card is the project's switch
+  - fields you add here with **Add field**, which belong to this ticket alone: type a name and a value, flip the switch to put it on the card, and remove it again with the bin. The name is the field's identity, so renaming it carries the value along. After a save they are listed alphabetically by name.
+
+  Fields computed from the linked session (see *Session chips* below) are not listed here — there is nothing to type in.
 - **Attachments** — upload file attachments to the ticket (stored as base64)
 - **Chat Session** — link to an existing chat session or create a new one
 - **Comments** — add comments to the ticket for discussion or notes
