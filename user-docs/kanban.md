@@ -73,6 +73,18 @@ Use **Start**, **Stop** and **Reset** to control the run:
 - **Reset** puts every ticket back to waiting. The chat sessions and their
   messages are kept, so the record of what the flow did stays in Chat.
 
+The flow's own menu (the ⋮ on its row) has **Log** — what the run did, newest
+first: when it was started, stopped or reset, which ticket went to the agent
+and into which chat session, and what failed. A reset is logged too, so the
+counters going back to zero is never a mystery. Each flow keeps its last 500
+entries.
+
+Moving a ticket to the **backlog** or **archive** takes it out of every flow it
+was in — a plan made of tickets that are not on the board is one you cannot
+reason about. Bringing the ticket back does not put it into the flow again.
+A ticket the agent is working on right now is the exception: it stays until
+that run finishes, so archiving never cancels work silently.
+
 Every ticket and every step shows its state — waiting, working, done, failed or
 skipped (an archived or deleted ticket is skipped). A failed ticket stops the
 flow unless you turn that off for the flow. The flow never moves tickets

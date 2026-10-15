@@ -62,6 +62,29 @@ Attachments provide additional context that Claude can reference when the skill 
 - Use the **Refresh** button to reload the skill list
 - Right-click a skill to rename or delete it
 
+## Full ticket cycle (built-in)
+
+The built-in **Full ticket cycle** skill takes one ticket from start to finish
+and keeps the board in sync while it works:
+
+1. moves the ticket to **In Progress**,
+2. writes an analysis and an implementation plan into `docs/analyses/`,
+3. implements it,
+4. moves the ticket to **Test** and runs the project's tests, staying there
+   until they pass,
+5. commits (merging the worktree branch first, if there is one), moves the
+   ticket to **Done**, then deletes the ticket's worktree and clears its
+   `worktree_path`.
+
+It knows which ticket it is working on because a chat linked to a ticket says
+so in its system prompt. Column ids come from `get_kanban_board` and are
+matched by title, so renamed columns are reported rather than guessed, and a
+failed step leaves the ticket where it is with the reason in a ticket comment.
+
+If you have a **column prompt** configured for one of those columns, moving the
+ticket there fires it — the cycle would then run alongside whatever that prompt
+starts. Use one or the other for a given column.
+
 ## Using Skills
 
 ### In Chat

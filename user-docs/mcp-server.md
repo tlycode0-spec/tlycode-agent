@@ -50,12 +50,13 @@ Each request must include the `X-Project-Path` header so the server knows which 
 | `delete_ticket_attachment` | Delete an attachment |
 | `read_ticket_attachment` | Download an attachment (base64) |
 
-### Kanban Flows (15 tools)
+### Kanban Flows (16 tools)
 
 | Tool | Description |
 |---|---|
 | `list_kanban_flows` | List the project's flows with status and progress |
 | `get_kanban_flow` | One flow with its steps and the state of every ticket |
+| `get_kanban_flow_log` | The run log: start/stop/reset, dispatches, failures |
 | `create_kanban_flow` | Create an empty flow |
 | `update_kanban_flow` | Rename a flow, or change its description / stop-on-error |
 | `delete_kanban_flow` | Delete a flow (refused while it runs) |
