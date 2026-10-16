@@ -54,17 +54,18 @@ Each request must include the `X-Project-Path` header so the server knows which 
 | `delete_ticket_attachment` | Delete an attachment |
 | `read_ticket_attachment` | Download an attachment (base64) |
 
-### Kanban Flows (16 tools)
+### Kanban Flows (17 tools)
 
 | Tool | Description |
 |---|---|
 | `list_kanban_flows` | List the project's flows with status and progress |
 | `get_kanban_flow` | One flow with its steps and the state of every ticket |
 | `get_kanban_flow_log` | The run log: start/stop/reset, dispatches, failures |
+| `get_kanban_flow_usage` | What the run cost: tokens and time per ticket, per step and in total |
 | `create_kanban_flow` | Create an empty flow |
 | `update_kanban_flow` | Rename a flow, or change its description / stop-on-error |
 | `delete_kanban_flow` | Delete a flow (refused while it runs) |
-| `create_flow_step` | Add a step (sequential/parallel, own/shared session, worktree per ticket, the column that finishes a ticket) |
+| `create_flow_step` | Add a step (sequential/parallel, own/shared session, worktree per ticket, the column that finishes a ticket, pause after the step) |
 | `update_flow_step` | Rename a step or change how it runs |
 | `delete_flow_step` | Delete a step |
 | `reorder_flow_steps` | Set the order the steps run in |
@@ -83,7 +84,11 @@ first prompt, and takes the worktree away again when the ticket reaches the
 Done column (one with uncommitted changes is left alone); it needs per-ticket
 sessions. `done_column` names the board column a ticket has to reach before the
 step counts it as finished — for boards whose columns send prompts of their
-own, where the first agent run is only the opening move.
+own, where the first agent run is only the opening move. `pause_after` stops
+the run once the step is done instead of starting the next one — the way to try
+a single step out — and a later start carries on from the step that follows.
+`prompt_profile` names a prompt profile that replaces the project's prompts for
+the step's tickets and their chat sessions while it works on them.
 
 ### Prompt Execution (2 tools)
 

@@ -16,11 +16,14 @@ By default, three columns are created: **To Do**, **In Progress**, **Done**.
 ## Tickets
 
 - Click **Add ticket** (+ button) on a column to create a new ticket
-- Click **Edit** on a ticket to open the ticket dialog
+- A card's actions are icons — hover one for its name. The pencil opens the
+  ticket dialog, the speech bubble jumps to the linked chat session (it spins
+  while that session's agent is answering), and the arrow-into-a-box is the
+  **Move** menu described below.
 - **Drag and drop** tickets between columns to change their status — grab the
   card anywhere, not only by its grip. With a finger the grip is the one place
-  that drags, so that a swipe still scrolls the column; the card's **Move**
-  button does the same thing in two taps.
+  that drags, so that a swipe still scrolls the column; the card's move icon
+  does the same thing in two taps.
 
 ### Ordering cards in a column
 
@@ -28,7 +31,7 @@ The order of the cards inside a column is their priority, and it is kept — dra
 a card up or down and it stays where you dropped it.
 
 Dragging stops being practical in a long column, where the other end is off
-screen. The **Move** button on the card does the same thing in two clicks:
+screen. The move icon on the card does the same thing in two clicks:
 
 - **To top of column** / **To bottom of column** — reorder inside the card's
   own column
@@ -96,7 +99,7 @@ and backlogged tickets have their own search in their own views.
 
 While a search is on, cards cannot be dragged: a position inside a filtered
 column is not the card's position in the real column, so a drop would reorder
-the column wrongly. Use the **Move** button on the card instead — it puts the
+the column wrongly. Use the move icon on the card instead — it puts the
 card at the top of the column you choose.
 
 ## Backlog
