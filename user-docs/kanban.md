@@ -17,7 +17,10 @@ By default, three columns are created: **To Do**, **In Progress**, **Done**.
 
 - Click **Add ticket** (+ button) on a column to create a new ticket
 - Click **Edit** on a ticket to open the ticket dialog
-- **Drag and drop** tickets between columns to change their status
+- **Drag and drop** tickets between columns to change their status — grab the
+  card anywhere, not only by its grip. With a finger the grip is the one place
+  that drags, so that a swipe still scrolls the column; the card's **Move**
+  button does the same thing in two taps.
 
 ### Ordering cards in a column
 
@@ -49,7 +52,7 @@ The ticket dialog lets you edit all ticket properties:
 - **System Prompt** — a custom system prompt that will be sent to Claude when running this ticket
 - **Skill** — attach a skill to use as context when running the ticket
 - **Custom fields** — metadata on the ticket, e.g. a Jira ticket number. Two kinds sit side by side:
-  - fields the project defines for every ticket (Settings ▸ Kanban), listed with their configured name; whether they reach the card is the project's switch
+  - fields the project defines for every ticket (the `ticket_fields` project setting, see [Settings](./settings.md#kanban)), listed with their configured name; whether they reach the card is the project's switch
   - fields you add here with **Add field**, which belong to this ticket alone: type a name and a value, flip the switch to put it on the card, and remove it again with the bin. The name is the field's identity, so renaming it carries the value along. After a save they are listed alphabetically by name.
 
   Fields computed from the linked session (see *Session chips* below) are not listed here — there is nothing to type in.
@@ -64,7 +67,7 @@ A card can also carry two chips computed from its linked chat session, so the nu
 - **tokens in context** — the input side of the session's last turn. Highlighted once it passes the project's threshold, which is where rotating the session into a fresh one starts to pay off.
 - **session hotness** — `until 14:32 (12 min)` while the prompt cache is still hot, `cold` afterwards. Waking a cold session re-reads the whole context, so a cold chip is a warning that the next turn is expensive.
 
-Both are off until you add them in Settings ▸ Kanban as a ticket field whose *Value source* is the session (same place, and the same *Show on card* switch, as the project's own fields). The hot window and the warning threshold are set there too. The chips refresh when a turn finishes; the hotness countdown ticks on its own.
+Both are off until the project defines a ticket field whose source is the session (`session_tokens` or `session_hot` in `ticket_fields`), together with the two thresholds `session_hot_minutes` and `session_context_warn_tokens` — there is no screen for any of it, see [Settings](./settings.md#kanban). The chips refresh when a turn finishes; the hotness countdown ticks on its own.
 
 ### Running a Ticket
 

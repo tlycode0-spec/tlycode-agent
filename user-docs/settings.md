@@ -44,35 +44,61 @@ Configure a prompt and skill for each Kanban column. When a ticket is moved to a
 
 The switch in the section header turns the whole thing off. With it off, moving a ticket into a column sends nothing — the per-column settings are kept, so you can switch it back on later. Turning it off also means a card can be moved between columns while its agent is responding: that move is otherwise refused, because the column's prompt would land in a session mid-answer. The switch is per project and lives in `.tlycode-settings.json` (`column_prompts_enabled`); prompt profiles do not change it.
 
-## Kanban ▸ Custom Ticket Fields
+## Kanban
 
-Extra fields every ticket in the project has, in the spirit of Jira's custom fields — a Jira ticket number, an estimate, whatever the project needs. Each field has a name and a switch:
+The tab is empty: the Kanban board has no settings of its own at the moment.
+More will land here.
 
-- **Name** — the label shown on the ticket and on the card. It can be renamed any time; the key underneath it (shown in grey next to the name) is fixed, because that is what the tickets' values are stored under.
-- **Value source** — where the value comes from: *I fill it in on the ticket* (the default), or one of the two numbers computed from the ticket's linked chat session, described below.
-- **Show on card** — with it on, the field's value appears as a small chip on the card in the board, so things like a ticket number no longer have to be squeezed into the card's title.
+### Custom ticket fields, without the editor
 
-Values of a manual field are filled in per ticket, in the ticket dialog. A field with no value shows no chip. Until you add a field, the board looks exactly as it did before — a project that wants plain cards keeps them plain.
+Custom ticket fields — a Jira ticket number, an estimate, whatever the project
+needs — used to be defined on this tab. The fields themselves are still there
+and a board that has them keeps showing them; what is gone is the screen that
+edited the project-wide ones. Two ways in are left:
 
-A field defined here is on **every** ticket of the project. For something only one ticket needs, skip this screen: the ticket dialog has its own **Add field**, and a field added there lives on that ticket alone, with its own switch for the card.
+- **Per ticket** — the ticket dialog's own **Add field**. A field added there
+  belongs to that ticket alone and has its own switch for the card. That covers
+  everything a single ticket needs.
+- **For the whole project** — the `ticket_fields` key in
+  `.tlycode-settings.json` (in server mode, the project's settings in the
+  database), which an agent writes over MCP with `save_project_setting` and
+  reads with `get_project_settings`. Each entry has a `key` (fixed, it is what
+  the values hang on), a `label`, a `show_on_card` switch and a `source`:
+  `manual`, `session_tokens` or `session_hot`.
+
+Deleting a field does **not** erase the values stored on the tickets: add the
+field back and they reappear.
 
 ### Chips computed from the session
 
-Two value sources are not typed in at all — they are read off the linked session's latest turn:
+A field whose source is the session is not typed in at all — it is read off the
+linked session's latest turn:
 
-- **Tokens in session context** — how much the session has in its context, i.e. the input side of its last turn (new input + cache read + cache write). This is *not* the cumulative "Σ tokens" the chat shows: that one counts the whole history and is much larger. The last turn's output is not counted either — it only enters the context when the next request sends it back.
-- **Session hotness** — until when the session's prompt cache stays hot, as `until 14:32 (12 min)`, and `cold` once the window is over. Waking a cold session re-reads the whole context, so this is what tells you whether to pick the session up now or let it go.
+- **Tokens in session context** (`session_tokens`) — how much the session has in
+  its context, i.e. the input side of its last turn (new input + cache read +
+  cache write). This is *not* the cumulative "Σ tokens" the chat shows: that one
+  counts the whole history and is much larger. The last turn's output is not
+  counted either — it only enters the context when the next request sends it
+  back.
+- **Session hotness** (`session_hot`) — until when the session's prompt cache
+  stays hot, as `until 14:32 (12 min)`, and `cold` once the window is over.
+  Waking a cold session re-reads the whole context, so this is what tells you
+  whether to pick the session up now or let it go.
 
-A computed field has no value to type in, so the ticket dialog does not offer it. A ticket with no linked session — or one whose agent reports no token usage — shows no computed chip.
+A computed field has no value to type in, so the ticket dialog does not offer
+it. A ticket with no linked session — or one whose agent reports no token usage
+— shows no computed chip.
 
-### Session chips
+Two project settings decide when such a chip is highlighted. They have no editor
+either; they are read the same way as `ticket_fields` and fall back to the
+defaults below.
 
-Two thresholds in the same tab drive those chips:
-
-- **Hot cache (minutes)** — how long after the last turn the session counts as hot. No agent reports this (Claude has both a 5-minute and a 1-hour prompt cache), so the chip is only as honest as this number. Default 60.
-- **Warn above (tokens)** — the context size at which rotating the session pays off. Above it the token chip is highlighted; nothing is rotated automatically. Default 160000.
-
-Deleting a field does **not** erase the values stored on the tickets: add the field back and they reappear. The definitions live in `.tlycode-settings.json` (`ticket_fields`) in desktop mode, so they travel with the repository; in server mode they are stored per project in the database. Agents read them over MCP with `get_project_settings` and write values with `update_kanban_ticket`.
+- **`session_hot_minutes`** — how long after the last turn the session counts as
+  hot. No agent reports this (Claude has both a 5-minute and a 1-hour prompt
+  cache), so the chip is only as honest as this number. Default 60.
+- **`session_context_warn_tokens`** — the context size at which rotating the
+  session pays off. Above it the token chip is highlighted; nothing is rotated
+  automatically. Default 160000.
 
 ## Log Level
 
