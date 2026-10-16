@@ -141,6 +141,18 @@ Use **Start**, **Stop** and **Reset** to control the run:
 Rename a flow from the ⋮ on its row; rename a step by clicking its title in the
 step header and typing over it (Enter saves, Escape puts the old one back).
 
+Start, Stop and Reset are the whole run; a single ticket has a ⋮ of its own on
+its card:
+
+- **Mark as done** — the ticket counts as finished without being run, for work
+  you did yourself. A ticket the agent is working on right now has its turn
+  cancelled first.
+- **Take out of the run** — the run passes the ticket by, the way it passes by
+  one that was archived off the board. The rest of the step carries on.
+- **Put back into the run** — the ticket goes back to waiting and the run picks
+  it up again. A step and a flow that had already called themselves finished
+  reopen for it, so press **Start** if the run was over.
+
 The flow's own menu (the ⋮ on its row) also has **Log** — what the run did, newest
 first: when it was started, stopped or reset, which ticket went to the agent
 and into which chat session, and what failed. A reset is logged too, so the

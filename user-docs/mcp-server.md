@@ -54,7 +54,7 @@ Each request must include the `X-Project-Path` header so the server knows which 
 | `delete_ticket_attachment` | Delete an attachment |
 | `read_ticket_attachment` | Download an attachment (base64) |
 
-### Kanban Flows (17 tools)
+### Kanban Flows (18 tools)
 
 | Tool | Description |
 |---|---|
@@ -72,6 +72,7 @@ Each request must include the `X-Project-Path` header so the server knows which 
 | `add_flow_items` | Put tickets into a step |
 | `move_flow_item` | Move a ticket inside a step or into another step |
 | `remove_flow_item` | Take a ticket out of a step |
+| `set_flow_item_status` | Mark one ticket done, take it out of the run, or put it back |
 | `start_kanban_flow` | Start or resume the run |
 | `stop_kanban_flow` | Stop the run and cancel the turns in flight |
 | `reset_kanban_flow` | Put every ticket back to waiting |
@@ -90,6 +91,12 @@ a single step out — and a later start carries on from the step that follows.
 `prompt_profile` names an agent profile (`list_agent_profiles`) that replaces
 the project's prompts for the step's tickets and their chat sessions while it
 works on them.
+
+`set_flow_item_status` decides one ticket's fate instead of the whole run's:
+`done` marks it finished without running it, `skipped` takes it out of the run,
+`pending` puts it back in the queue. A running ticket has its turn cancelled
+first, and a step or flow that had called itself finished reopens for a ticket
+put back in.
 
 ### Agent Profiles (6 tools)
 
