@@ -10,10 +10,45 @@ The left sidebar shows your chat sessions:
 
 - Click **+ New Chat** to create a new session
 - Click a session to open it
-- Use the **search bar** to filter sessions by name
+- Use the **search bar** to find sessions (see [Search](#search))
 - Filter by type: **All**, **User**, **Scheduler**, **Archive**
 - Active sessions (with ongoing AI responses) show a spinner indicator — even across projects
 - Right-click or use the menu to rename, archive, or delete a session
+
+## Search
+
+### Across sessions
+
+The sidebar's search box looks through the project's sessions. The **tune icon**
+next to it sets where it looks:
+
+- **Session title**
+- **Message content**
+
+Both are on by default, they combine (a session is found if either matches), and
+the last one left on cannot be turned off — "search nowhere" would just make the
+box look broken. The choice is remembered for next time.
+
+A session found by its messages shows how many of them contain the query next to
+its date, and the matching part of a title is highlighted. **Clicking a result
+opens the session with the same search already running**, so you land on the
+words you were looking for.
+
+Which sessions are searched follows the tab you are on: the **Archive** tab
+searches the archive, the others search the open sessions. The **Other projects**
+and **Shared** tabs match on the title only — their rows come from elsewhere.
+
+### Inside a session
+
+Press **Ctrl+F** (**⌘F**) to search the open conversation. Every occurrence is
+highlighted inside the message bubbles, and **↑/↓** (or Enter / Shift+Enter)
+steps through the matching messages — the counter reads "message 2 / 7" for that
+reason, as one message can contain several occurrences. Stepping to a message
+scrolls to its first occurrence, so a long answer doesn't leave you hunting for
+the match.
+
+Searching is a plain case-insensitive substring match: no fuzzy matching, and
+`a` does not find `á`.
 
 ## Sending Messages
 
