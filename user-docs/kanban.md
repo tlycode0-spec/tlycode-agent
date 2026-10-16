@@ -128,6 +128,13 @@ Each step decides how its tickets run:
   **One session** — the whole step runs in a single shared chat session, so the
   agent keeps the context of the previous tickets. Only available for a
   sequential step, because one session handles one turn at a time.
+- **Done when the ticket reaches…** — by default a ticket is finished when its
+  first agent run ends. Name a board column instead and the step waits until
+  the ticket lands there, which is how a board whose columns send prompts of
+  their own runs a ticket through several turns. The picker needs **Column
+  prompts** switched on in the [agent profile](#agent-profile) — with them off
+  nothing would move the ticket on and the step would wait forever — so it is
+  greyed out until they are.
 
 Use **Start**, **Stop** and **Reset** to control the run:
 
@@ -177,6 +184,13 @@ skipped (an archived or deleted ticket is skipped). A failed ticket stops the
 flow unless you turn that off for the flow. The flow never moves tickets
 between columns, so your board stays as you left it.
 
+A step that waits for a column has one more state: **Waiting for you**. The
+agent has finished its turn and the ticket has not reached the column, so
+nothing is running and the run cannot move until somebody puts it there — you,
+by dragging the card, or the agent from its own chat. The chip names the column
+it is waiting for. The ticket still holds its place in the step, so a sequential
+step will not start the next one behind its back.
+
 ## Agent Profile
 
 Click **Agent profile** on the board toolbar — the third view next to the board
@@ -189,13 +203,40 @@ and its values are written into the project's settings, so the whole project
 switches at once. The built-in **Default** profile is read only; make your own
 with **+** and delete it with the bin.
 
+These prompts apply to every turn, whoever started it — a message you type, or
+a ticket the flow manager dispatches. The first-message prompt, together with
+the skill or persona set next to it, goes to a chat session nothing has been
+said in yet: a ticket whose chat is still empty opens with it on its first run
+and not again afterwards. A skill or persona set on the ticket itself is an
+explicit choice and keeps precedence over the profile's.
+
 A flow step can run under an agent profile of its own — see the step's settings
 in the flow manager. While the step works on a ticket, that profile replaces
-the project's prompts for it.
+the project's prompts for it, the first-message prompt included.
 
 ### Column Prompts
 
 The **Column prompts** section of the agent profile configures a prompt and skill for each column. When a ticket is moved to a column that has a prompt configured, the prompt is automatically sent to the ticket's linked chat session.
+
+A column may configure only a skill or persona and no words of its own. The
+first time — into a session nothing has been said in — the ticket's own title
+and description stand in for the missing prompt, so the agent knows what it is
+looking at. After that the session already has the ticket, so later columns
+send the skill alone: repeating the ticket on every move would bury the
+instruction that matters under context the agent read turns ago. The chat still
+shows the chip naming the skill that ran.
+
+A move that sends nothing says why, so it never looks like a broken trigger:
+the switch is off, the column has nothing configured, or the ticket has no chat
+session. The one worth knowing about: while a flow step with an agent profile
+of its own works on a ticket, that profile's column prompts **replace** the
+project's — so a board that looks configured can still send nothing, and the
+message names the profile responsible.
+
+The prompt is written into the chat as a message from you, with the chip
+naming the skill or persona it ran with — a turn nobody typed would otherwise
+show up as an answer to nothing. If the session is still empty, the prompt also
+carries the profile's first-message opening.
 
 While the agent is responding in a ticket's chat session, that ticket cannot be moved into a column whose prompt would then land in the running session — the board says so and leaves the card where it was. Every other move goes through: reordering inside a column, and moving into a column that has no prompt configured. The switch next to **Column prompts** turns the prompts off altogether, and with them this restriction.
 

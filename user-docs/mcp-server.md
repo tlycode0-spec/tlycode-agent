@@ -92,6 +92,13 @@ a single step out — and a later start carries on from the step that follows.
 the project's prompts for the step's tickets and their chat sessions while it
 works on them.
 
+`move_kanban_ticket` fires the prompt of the column the ticket lands in, the
+same as a move on the board does. It goes through the session's pending queue
+rather than the single-shot channel: an agent moving its own ticket on is
+itself mid-turn, so the prompt queues up behind that turn instead of racing it.
+That is also what keeps the column chain a flow step's `done_column` relies on
+going. The agent profile's Column prompts switch applies here too.
+
 `set_flow_item_status` decides one ticket's fate instead of the whole run's:
 `done` marks it finished without running it, `skipped` takes it out of the run,
 `pending` puts it back in the queue. A running ticket has its turn cancelled

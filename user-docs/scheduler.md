@@ -54,6 +54,12 @@ For an existing session, **Skip the run while the session is responding** is on 
 
 If the target session is deleted, the task falls back to creating a new session and shows a warning on the task row.
 
+A run into a session nothing has been said in yet opens with the project's
+[agent profile](./kanban.md#agent-profile) — its first-message prompt and the
+skill or persona beside it — the same as a message you type yourself. A skill
+or persona named on the task is an explicit choice and keeps precedence. The
+appended prompt applies to every run, first or not.
+
 ## How It Works
 
 The scheduler runs a background loop every 10 seconds and compares each enabled task against its precomputed next run time. When a task is due, it:
