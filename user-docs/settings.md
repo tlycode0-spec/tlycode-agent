@@ -30,19 +30,17 @@ Enable to start TlyCode Agent automatically when the system boots. Desktop only.
 
 Click **Run System Check** to re-check the installation status of Claude CLI, Node.js, GitHub CLI, and other supported tools.
 
-## Append Prompt
+## Prompts — moved
 
-A text that is prepended to the beginning of every chat prompt. Useful for project-wide instructions. You can also select a **Skill** to use as additional context for all messages.
+The project's prompts (append prompt, first-message prompt, prompt before
+deleting a session and the per-column prompts) are no longer a settings tab.
+They live on the Kanban board under **Agent profile**, the third view next to
+the board and the flow manager — see [Kanban Board](./kanban.md#agent-profile).
 
-## First Message Prompt
-
-A text that is added to the beginning of the first message in every new chat session. Useful for onboarding instructions. Also supports an optional skill.
-
-## Column Prompts
-
-Configure a prompt and skill for each Kanban column. When a ticket is moved to a column with a configured prompt, the prompt is automatically sent to the ticket's linked chat session. This enables automated workflows — e.g., when a ticket moves to "In Progress", Claude automatically starts working on it.
-
-The switch in the section header turns the whole thing off. With it off, moving a ticket into a column sends nothing — the per-column settings are kept, so you can switch it back on later. Turning it off also means a card can be moved between columns while its agent is responding: that move is otherwise refused, because the column's prompt would land in a session mid-answer. The switch is per project and lives in `.tlycode-settings.json` (`column_prompts_enabled`); prompt profiles do not change it.
+The one thing worth repeating here: the **Column prompts** switch is per
+project and lives in `.tlycode-settings.json` (`column_prompts_enabled`). Agent
+profiles carry prompt *content*, so switching a profile does not change that
+switch.
 
 ## Kanban
 

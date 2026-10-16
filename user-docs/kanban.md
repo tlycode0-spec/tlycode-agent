@@ -138,7 +138,10 @@ Use **Start**, **Stop** and **Reset** to control the run:
 - **Reset** puts every ticket back to waiting. The chat sessions and their
   messages are kept, so the record of what the flow did stays in Chat.
 
-The flow's own menu (the ⋮ on its row) has **Log** — what the run did, newest
+Rename a flow from the ⋮ on its row; rename a step by clicking its title in the
+step header and typing over it (Enter saves, Escape puts the old one back).
+
+The flow's own menu (the ⋮ on its row) also has **Log** — what the run did, newest
 first: when it was started, stopped or reset, which ticket went to the agent
 and into which chat session, and what failed. A reset is logged too, so the
 counters going back to zero is never a mystery. Each flow keeps its last 500
@@ -162,11 +165,27 @@ skipped (an archived or deleted ticket is skipped). A failed ticket stops the
 flow unless you turn that off for the flow. The flow never moves tickets
 between columns, so your board stays as you left it.
 
-## Column Prompts
+## Agent Profile
 
-In **Settings**, you can configure a prompt and skill for each column. When a ticket is moved to a column that has a prompt configured, the prompt is automatically sent to the ticket's linked chat session.
+Click **Agent profile** on the board toolbar — the third view next to the board
+and the flow manager — to set what the agents of this project are told.
 
-While the agent is responding in a ticket's chat session, that ticket cannot be moved into a column whose prompt would then land in the running session — the board says so and leaves the card where it was. Every other move goes through: reordering inside a column, and moving into a column that has no prompt configured. The switch next to **Column Prompts** in Settings turns the prompts off altogether, and with them this restriction.
+An **agent profile** is a named set of prompts: the first-message prompt, the
+prompt appended to every message, the prompt that runs before a session is
+deleted, and a prompt per board column. Pick one from the selector at the top
+and its values are written into the project's settings, so the whole project
+switches at once. The built-in **Default** profile is read only; make your own
+with **+** and delete it with the bin.
+
+A flow step can run under an agent profile of its own — see the step's settings
+in the flow manager. While the step works on a ticket, that profile replaces
+the project's prompts for it.
+
+### Column Prompts
+
+The **Column prompts** section of the agent profile configures a prompt and skill for each column. When a ticket is moved to a column that has a prompt configured, the prompt is automatically sent to the ticket's linked chat session.
+
+While the agent is responding in a ticket's chat session, that ticket cannot be moved into a column whose prompt would then land in the running session — the board says so and leaves the card where it was. Every other move goes through: reordering inside a column, and moving into a column that has no prompt configured. The switch next to **Column prompts** turns the prompts off altogether, and with them this restriction.
 
 ## Cross-Navigation with Chat
 

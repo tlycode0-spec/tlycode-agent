@@ -87,8 +87,32 @@ step counts it as finished — for boards whose columns send prompts of their
 own, where the first agent run is only the opening move. `pause_after` stops
 the run once the step is done instead of starting the next one — the way to try
 a single step out — and a later start carries on from the step that follows.
-`prompt_profile` names a prompt profile that replaces the project's prompts for
-the step's tickets and their chat sessions while it works on them.
+`prompt_profile` names an agent profile (`list_agent_profiles`) that replaces
+the project's prompts for the step's tickets and their chat sessions while it
+works on them.
+
+### Agent Profiles (6 tools)
+
+An agent profile is a named set of the project's prompts: `initial_prompt` (the
+first message of a session), `append_prompt` (every prompt),
+`system_prompt_before_delete` — each with an optional skill or persona — and
+`column_prompts`, a prompt per board column.
+
+| Tool | Description |
+|---|---|
+| `list_agent_profiles` | List the profiles and which one the project runs under |
+| `get_agent_profile` | Read one profile's fields |
+| `create_agent_profile` | Create a profile (fields optional) |
+| `update_agent_profile` | Change fields; only the ones you send change |
+| `delete_agent_profile` | Delete a profile |
+| `set_active_agent_profile` | Make a profile the one the project runs under |
+
+A profile is only a saved preset — what a turn reads is the project's own
+settings. `set_active_agent_profile` writes the profile's values into them. A
+profile **replaces** the project's prompts rather than layering over them, so
+an empty field in it clears the project's value. Editing the active profile
+applies it right away; deleting it drops the project back to `default`, the
+built-in profile, which is read only.
 
 ### Prompt Execution (2 tools)
 
