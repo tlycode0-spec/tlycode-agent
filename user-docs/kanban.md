@@ -113,6 +113,34 @@ Click the **Backlog** button to manage tickets that aren't on the board yet. Bac
 
 Click **Archived** to view and restore archived tickets. Archive also supports search and pagination. When a ticket is archived, its linked chat session is also archived.
 
+## Bulk actions
+
+**A whole column.** The column menu (⋮ next to its title) has **All to
+backlog** and **All to archive**. They take every card the column shows on the
+board — including cards further down that haven't been scrolled into view yet —
+after you confirm the count. Cards already in the backlog stay where they are.
+While the board is searched both items are disabled: the column then shows only
+the matches, and "all" would mean more than you see.
+
+**Picked tickets.** In the backlog and the archive every ticket has a
+checkbox, and the checkbox in the table header (on a phone, the one above the
+list) picks the whole page. The toolbar above the list then offers:
+
+- Archive: **Back to board**.
+- Backlog: **Move to board** and **Archive**.
+
+"Select all" means the current page (20 tickets). The selection is cleared when
+you change the page, the search or the view.
+
+**Back to board** returns a ticket to the board even when it was archived out of
+the backlog, and unarchives its chat. A ticket goes back to the column and place
+it left.
+
+**A running agent.** Archiving skips a ticket whose agent is answering right
+now and tells you how many were skipped; archive it once the agent is done.
+Tickets moved to the backlog or archive leave their flows the same way a single
+ticket does (see [Flow Manager](#flow-manager)).
+
 ## Flow Manager
 
 Click **Flow manager** on the board toolbar to run a batch of tickets in a
@@ -209,6 +237,12 @@ into it — a ticket dropped between visible cards lands in the right place amon
 the hidden ones too. A ticket just added to a step is **Waiting**, so with a
 filter that leaves that state out it disappears from view until you clear it.
 Each flow remembers its own filter.
+
+The **Board tickets** list on the right has a filter of its own: one chip per
+board column, with how many tickets the column holds. Pick one or more columns
+— say **To Do** — so finished tickets do not bury the ones still to plan;
+**Clear filter** lists every column again. The search works within the chosen
+columns, and the project remembers the choice.
 
 ## Agent Profile
 
