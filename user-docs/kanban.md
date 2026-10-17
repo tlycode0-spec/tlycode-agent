@@ -131,7 +131,11 @@ Each step decides how its tickets run:
 - **Done when the ticket reaches…** — by default a ticket is finished when its
   first agent run ends. Name a board column instead and the step waits until
   the ticket lands there, which is how a board whose columns send prompts of
-  their own runs a ticket through several turns. The picker needs **Column
+  their own runs a ticket through several turns. Landing in the column is not
+  by itself the end: the ticket counts as finished once it is there *and* its
+  chat has gone quiet — no agent working and no prompt waiting its turn. The
+  target column's own prompt is queued by the very move that brings the ticket
+  there, so without that wait a ticket would be called done and then worked on. The picker needs **Column
   prompts** switched on in the [agent profile](#agent-profile) — with them off
   nothing would move the ticket on and the step would wait forever — so it is
   greyed out until they are.
