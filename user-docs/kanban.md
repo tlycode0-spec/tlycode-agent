@@ -180,6 +180,16 @@ Use **Start**, **Stop** and **Reset** to control the run:
 - **Reset** puts every ticket back to waiting. The chat sessions and their
   messages are kept, so the record of what the flow did stays in Chat.
 
+You do not have to stop a run to rework the steps it has not got to yet. While
+the flow runs, a step that is still **Waiting** can have its settings changed,
+be deleted, or be dragged to another place among the other waiting steps — the
+run reads a step's settings when it gets there. You can also add new steps and
+add, remove or move tickets in a waiting step. A step that is running or has
+finished is locked until the run stops: its settings are read-only, it cannot
+be deleted, and it keeps its place in the order, so no waiting step can be put
+in front of it. Renaming always works. Delete the last step that is still
+waiting and the run ends once the current one is done.
+
 Rename a flow from the ⋮ on its row; rename a step by clicking its title in the
 step header and typing over it (Enter saves, Escape puts the old one back).
 
@@ -256,6 +266,16 @@ and its values are written into the project's settings, so the whole project
 switches at once. The built-in **Default** profile is read only; make your own
 with **+** and delete it with the bin.
 
+Profiles belong to the project. The selector lists only this project's
+profiles and **Default**, two projects may each have a profile of the same
+name, and creating, editing or deleting one here leaves every other project
+alone. To reuse a profile from another project, click the copy button next to
+**+**, pick the project and the profile, and optionally give it a new name —
+the copy is this project's own from then on. Profiles that were shared by all
+projects before profiles became per project are offered there as **Shared
+profiles from before**; a project that was using one of them as its active
+profile, or in a flow step, got its own copy automatically.
+
 These prompts apply to every turn, whoever started it — a message you type, or
 a ticket the flow manager dispatches. The first-message prompt, together with
 the skill or persona set next to it, goes to a chat session nothing has been
@@ -263,8 +283,8 @@ said in yet: a ticket whose chat is still empty opens with it on its first run
 and not again afterwards. A skill or persona set on the ticket itself is an
 explicit choice and keeps precedence over the profile's.
 
-A flow step can run under an agent profile of its own — see the step's settings
-in the flow manager. While the step works on a ticket, that profile replaces
+A flow step can run under an agent profile of its own, one of the project's —
+see the step's settings in the flow manager. While the step works on a ticket, that profile replaces
 the project's prompts for it, the first-message prompt included.
 
 ### Column Prompts

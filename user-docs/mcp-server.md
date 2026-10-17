@@ -67,9 +67,9 @@ Each request must include the `X-Project-Path` header so the server knows which 
 | `update_kanban_flow` | Rename a flow, or change its description / stop-on-error |
 | `delete_kanban_flow` | Delete a flow (refused while it runs) |
 | `create_flow_step` | Add a step (sequential/parallel, own/shared session, worktree per ticket, the column that finishes a ticket, pause after the step) |
-| `update_flow_step` | Rename a step or change how it runs |
-| `delete_flow_step` | Delete a step |
-| `reorder_flow_steps` | Set the order the steps run in |
+| `update_flow_step` | Rename a step or change how it runs (while the flow runs, only a step it has not got to yet) |
+| `delete_flow_step` | Delete a step (while the flow runs, only a step it has not got to yet) |
+| `reorder_flow_steps` | Set the order the steps run in (while the flow runs, running and finished steps keep their places) |
 | `add_flow_items` | Put tickets into a step |
 | `move_flow_item` | Move a ticket inside a step or into another step |
 | `remove_flow_item` | Take a ticket out of a step |
@@ -89,7 +89,7 @@ step counts it as finished — for boards whose columns send prompts of their
 own, where the first agent run is only the opening move. `pause_after` stops
 the run once the step is done instead of starting the next one — the way to try
 a single step out — and a later start carries on from the step that follows.
-`prompt_profile` names an agent profile (`list_agent_profiles`) that replaces
+`prompt_profile` names an agent profile of the flow's project (`list_agent_profiles`) that replaces
 the project's prompts for the step's tickets and their chat sessions while it
 works on them.
 
@@ -111,13 +111,17 @@ put back in.
 An agent profile is a named set of the project's prompts: `initial_prompt` (the
 first message of a session), `append_prompt` (every prompt),
 `system_prompt_before_delete` — each with an optional skill or persona — and
-`column_prompts`, a prompt per board column.
+`column_prompts`, a prompt per board column. Profiles belong to a project:
+each project has its own, plus the built-in `default`, and two projects may
+have a profile of the same name. Every profile tool takes the project's
+`project_path`.
 
 | Tool | Description |
 |---|---|
-| `list_agent_profiles` | List the profiles and which one the project runs under |
+| `list_agent_profiles` | List the project's profiles and which one it runs under |
 | `get_agent_profile` | Read one profile's fields |
 | `create_agent_profile` | Create a profile (fields optional) |
+| `copy_agent_profile` | Copy a profile from another project (`from_project_path: ""` copies from the profiles shared before profiles became per project) |
 | `update_agent_profile` | Change fields; only the ones you send change |
 | `delete_agent_profile` | Delete a profile |
 | `set_active_agent_profile` | Make a profile the one the project runs under |
