@@ -66,7 +66,7 @@ Each request must include the `X-Project-Path` header so the server knows which 
 | `create_kanban_flow` | Create an empty flow |
 | `update_kanban_flow` | Rename a flow, or change its description / stop-on-error |
 | `delete_kanban_flow` | Delete a flow (refused while it runs) |
-| `create_flow_step` | Add a step (sequential/parallel, own/shared session, worktree per ticket, the column that finishes a ticket, pause after the step) |
+| `create_flow_step` | Add a step (sequential/parallel, own/shared session, the column that finishes a ticket, pause after the step) |
 | `update_flow_step` | Rename a step or change how it runs (while the flow runs, only a step it has not got to yet) |
 | `delete_flow_step` | Delete a step (while the flow runs, only a step it has not got to yet) |
 | `reorder_flow_steps` | Set the order the steps run in (while the flow runs, running and finished steps keep their places) |
@@ -80,11 +80,10 @@ Each request must include the `X-Project-Path` header so the server knows which 
 
 The update tools are partial: only the fields you pass change.
 
-A step has two settings beyond its order and modes. `use_worktree` gives each
-of its tickets a `flow/<slug>` branch and a worktree of its own before the
-first prompt, and takes the worktree away again when the ticket reaches the
-Done column (one with uncommitted changes is left alone); it needs per-ticket
-sessions. `done_column` names the board column a ticket has to reach before the
+A step makes no worktrees: each ticket runs in the directory set on the ticket
+(its worktree, or the main project). Giving a ticket a worktree of its own is
+the job of the agent profile's skills. Beyond its order and modes, a step has
+these settings. `done_column` names the board column a ticket has to reach before the
 step counts it as finished — for boards whose columns send prompts of their
 own, where the first agent run is only the opening move. `pause_after` stops
 the run once the step is done instead of starting the next one — the way to try

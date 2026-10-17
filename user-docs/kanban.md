@@ -4,6 +4,35 @@ The Kanban board helps you track tasks and organize your work.
 
 ![Kanban Board](./images/kanban-view.png)
 
+## Boards
+
+A project can have several boards — say one for features, one for bugs and one
+for the cloud edition. Each board has its own columns and tickets, its own
+**archive**, its own **flows** and its own **agent profile**. The **backlog** is
+shared by all boards of the project.
+
+- Pick the board in the selector at the left of the board toolbar. The last
+  board you looked at is remembered per project.
+- The ⋮ next to the selector creates a board (with the default columns, or with
+  the same column titles as the current board), renames it, moves it left or
+  right, or deletes it.
+- A board can only be deleted once it is empty — no tickets on it, in its
+  archive or in the backlog — and while none of its flows is running. The
+  project's last board cannot be deleted.
+- The first board in the list is the **default board**. Agents and integrations
+  that do not name a board work with it.
+
+Search looks through the board on screen.
+
+### Moving a ticket to another board
+
+On a card, open the move menu and choose **Move to board…**; in the ticket
+dialog it is in the ⋯ menu. Pick the board and the column. The ticket keeps its
+chat, comments, attachments and worktree. It leaves the flows of its old board;
+while a flow is working on it, the move is refused — wait for the turn to end
+or stop the flow. The target column's prompt runs with the **target** board's
+agent profile.
+
 ## Columns
 
 By default, three columns are created: **To Do**, **In Progress**, **Done**.
@@ -48,20 +77,44 @@ for instance) and writes that order onto the board.
 
 ![Ticket Dialog](./images/kanban-ticket-dialog.png)
 
-The ticket dialog lets you edit all ticket properties:
+The ticket dialog is laid out like a Jira issue: the ticket's content on the
+left, its status and parameters on the right. Changes save on their own — there
+is no Save button; whatever is still being typed is saved when the dialog
+closes.
 
-- **Title** — the ticket name
-- **Description** — detailed description of the task (markdown supported)
-- **System Prompt** — a custom system prompt that will be sent to Claude when running this ticket
-- **Skill** — attach a skill to use as context when running the ticket
-- **Custom fields** — metadata on the ticket, e.g. a Jira ticket number. Two kinds sit side by side:
-  - fields the project defines for every ticket (the `ticket_fields` project setting, see [Settings](./settings.md#kanban)), listed with their configured name; whether they reach the card is the project's switch
-  - fields you add here with **Add field**, which belong to this ticket alone: type a name and a value, flip the switch to put it on the card, and remove it again with the bin. The name is the field's identity, so renaming it carries the value along. After a save they are listed alphabetically by name.
+**Header** — the column the ticket is in, the **⋯** menu (*Move to backlog*,
+*Archive*, *Delete* — deleting asks for confirmation) and **✕** to close.
 
-  Fields computed from the linked session (see *Session chips* below) are not listed here — there is nothing to type in.
-- **Attachments** — upload file attachments to the ticket (stored as base64)
-- **Chat Session** — link to an existing chat session or create a new one
-- **Comments** — add comments to the ticket for discussion or notes
+**Left column** (scrolls on its own):
+
+- **Title** — shown as a heading; click it to edit, Enter confirms, Escape restores it.
+- **Description** — rendered as markdown, the same way the chat renders it (tables, code, mermaid diagrams). Click the text or the pencil to edit the raw markdown; **Done**, Escape or clicking away goes back to the preview.
+- **Attachments** — **Add** picks files; you can also drop files anywhere on the left column or paste them (e.g. a screenshot) from the clipboard.
+- **Comments** — at the very bottom: a box for a new comment (Ctrl/Cmd+Enter sends), then the comments, newest first, rendered as markdown.
+
+**Right column:**
+
+- **Status** — the ticket's column as a coloured dropdown (grey for the first column, green for the last, blue in between). Picking another column moves the ticket there, with the same column prompt as a move on the board. While the agent is responding in the linked session the move is refused.
+- **Run** — starts the ticket in a new chat session and opens it, see *Running a Ticket*.
+- **Open chat** — opens the linked chat session.
+- **Details** (collapsible; the dialog remembers whether it is collapsed) — one `label | value` row per parameter; an empty value shows a grey *Add…*, click it to fill it in:
+  - **Persona / skill** — attach a persona or a skill to use as context when running the ticket
+  - **Worktree** — the git worktree the ticket's session works in; **+** creates a new one
+  - **Chat session** — the linked session, or link an existing one / **+** create a new one
+  - **Custom fields** — metadata on the ticket, e.g. a Jira ticket number. Two kinds sit side by side:
+    - fields the project defines for every ticket (the `ticket_fields` project setting, see [Settings](./settings.md#kanban)), listed with their configured name; whether they reach the card is the project's switch
+    - fields you add here with **Add field**, which belong to this ticket alone: click the name and the value to fill them in, flip the switch to put it on the card, and remove it again with the bin. The name is the field's identity, so renaming it carries the value along. After a save they are listed alphabetically by name.
+
+    Fields computed from the linked session (see *Session chips* below) are not listed here — there is nothing to type in.
+- Below the panel: when the ticket was created and last updated, and whether it is in the backlog, archived, or has a worktree a flow created for it.
+
+On a narrow window the right column moves under the content and the whole
+dialog scrolls as one.
+
+**New ticket** — the same layout with the title and description open for
+typing. Attachments, comments and the chat session appear once the ticket
+exists. The status picks the column the ticket is created in. **Create** (or
+Ctrl/Cmd+Enter) creates it.
 
 ### Session chips
 
@@ -74,7 +127,7 @@ Both are off until the project defines a ticket field whose source is the sessio
 
 ### Running a Ticket
 
-When a ticket has a description, system prompt, or skill, you can run it directly — this creates a new chat session with the ticket's context and sends the description as a prompt to Claude.
+When a ticket has a description or system prompt, you can run it directly — **Run** in the ticket dialog (or the `run_ticket` MCP tool) creates a new chat session linked to the ticket, sends the description as the first prompt with the ticket's persona or skill, and opens the chat. Run is off while the agent is responding in the ticket's linked session.
 
 ## Search
 
@@ -109,9 +162,13 @@ card at the top of the column you choose.
 
 Click the **Backlog** button to manage tickets that aren't on the board yet. Backlog supports search and pagination. Tickets can be moved between backlog and the board.
 
+The backlog is shared by every board of the project: it lists the backlog tickets of all of them, each with its board and column. **Move to board** asks which board and column the ticket goes to (with a single board it goes straight back to the column it came from).
+
 ## Archive
 
 Click **Archived** to view and restore archived tickets. Archive also supports search and pagination. When a ticket is archived, its linked chat session is also archived.
+
+The archive belongs to the board: it shows the archived tickets of the board on screen, and restoring puts a ticket back into the column it came from.
 
 ## Bulk actions
 
@@ -144,7 +201,7 @@ ticket does (see [Flow Manager](#flow-manager)).
 ## Flow Manager
 
 Click **Flow manager** on the board toolbar to run a batch of tickets in a
-planned order.
+planned order. Flows belong to the board on screen and take only its tickets.
 
 A **flow** is a list of named **steps**. Drag tickets from the board panel into
 a step, reorder them inside it, or drag them to another step. Steps run in
@@ -263,7 +320,16 @@ An **agent profile** is a named set of prompts: the first-message prompt, the
 prompt appended to every message, the prompt that runs before a session is
 deleted, and a prompt per board column. Pick one from the selector at the top
 and its values are written into the project's settings, so the whole project
-switches at once. The built-in **Default** profile is read only; make your own
+switches at once.
+
+Each board can also run under a profile of its own. The **Profile of board …**
+selector above the profile picks it: **Same as the project** (the default)
+keeps the board on the project's profile; picking a profile makes the board's
+tickets — their column prompts, first message, appended prompt and the prompt
+before deleting their chat — use that profile instead. While a board has its
+own profile, the edits on this screen change that profile only and leave the
+project's settings alone. A flow step with a profile still wins over the
+board's. The built-in **Default** profile is read only; make your own
 with **+** and delete it with the bin.
 
 Profiles belong to the project. The selector lists only this project's
