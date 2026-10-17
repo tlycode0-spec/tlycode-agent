@@ -40,7 +40,10 @@ and **Shared** tabs match on the title only — their rows come from elsewhere.
 
 ### Inside a session
 
-Press **Ctrl+F** (**⌘F**) to search the open conversation. Every occurrence is
+Press **Ctrl+F** (**⌘F**) to search the open conversation — it works even while
+you are typing in the prompt, and pressing it again selects the current query.
+**Esc** closes the search and puts the cursor back where it was. With no session
+open, the same shortcut jumps into the session list's search box. Every occurrence is
 highlighted inside the message bubbles, and **↑/↓** (or Enter / Shift+Enter)
 steps through the matching messages — the counter reads "message 2 / 7" for that
 reason, as one message can contain several occurrences. Stepping to a message
@@ -76,6 +79,24 @@ Click the **paperclip icon** to attach files to your message:
 - **Binary files** — file metadata (name, size, type) is described to Claude
 
 Files are automatically copied to the application data directory for persistence. Pending attachments (not yet sent) can be removed before sending.
+
+## Images, Diagrams and Choices in Agent Replies
+
+An assistant message is markdown, and besides text the bubble renders:
+
+- **Images from the project** — `![chart](docs/images/chart.png)` with a path relative to the project root (the session's worktree when it has one) loads the image straight from the project folder. Only image files (`png`, `jpg`, `gif`, `webp`, `svg`, …) are loaded, and never anything outside the project.
+- **Uploaded images** — `![screenshot](tlycode-att://<id>)` shows an attachment the agent uploaded with the MCP tool `add_assistant_attachment`. For a file already on disk (a Playwright screenshot, a rendered chart) the agent passes `file_path`, so the image does not have to go through its output as base64.
+- **Mermaid diagrams and charts** — a ```` ```mermaid ```` block is drawn as a diagram: flowcharts, sequence diagrams, but also charts (`pie`, `xychart-beta`).
+- **Choices** — a ```` ```tlycode-ui ```` block with a small JSON description renders buttons or a pick list. A click sends the text defined in the block as your next message, so it works with every agent. Once anything is sent after the message, the block turns read-only and marks what was picked.
+
+  ```json
+  {"type": "buttons", "title": "Deploy now?", "buttons": [{"label": "Yes", "send": "Yes, deploy"}, {"label": "No"}]}
+  {"type": "choice", "title": "Which environment?", "options": ["staging", "production"], "send": "Deploy to {value}"}
+  ```
+
+  A block with an unknown `type`, invalid JSON or out-of-range fields stays visible as plain code.
+
+Diagrams and choices appear once the reply has finished streaming; while it is still being written they show as code. Raw HTML, SVG markup and scripts in a reply are never rendered.
 
 ## Permissions
 

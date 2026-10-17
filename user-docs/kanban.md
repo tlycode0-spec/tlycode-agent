@@ -78,7 +78,8 @@ When a ticket has a description, system prompt, or skill, you can run it directl
 
 ## Search
 
-Type into the search box on the board toolbar and the cards filter as you type —
+Type into the search box on the board toolbar (or press **Ctrl+F** / **⌘F** to
+jump there from anywhere on the board, even from another text field) and the cards filter as you type —
 you stay on the board, no switching to a list. Each column then shows only its
 matches, and the number next to the column title is the number of matches in it.
 Press **Esc** or click the ✕ to go back to the whole board.
@@ -95,7 +96,9 @@ remembered. At least one has to stay on.
 
 Searching looks for cards whose text *contains* what you typed, ignoring case,
 and the whole board is searched — not just the cards already loaded. Archived
-and backlogged tickets have their own search in their own views.
+and backlogged tickets have their own search in their own views; Ctrl+F / ⌘F
+jumps into that one there. **Esc** in a search box clears the board search and
+puts the cursor back where it was.
 
 While a search is on, cards cannot be dragged: a position inside a filtered
 column is not the card's position in the real column, so a drop would reorder
@@ -194,6 +197,18 @@ nothing is running and the run cannot move until somebody puts it there — you,
 by dragging the card, or the agent from its own chat. The chip names the column
 it is waiting for. The ticket still holds its place in the step, so a sequential
 step will not start the next one behind its back.
+
+In a big run, use the **Show:** row under the run controls to see only the
+tickets in some states — say **Failed** and **Waiting for you**. Each chip says
+how many tickets of the whole run are in that state; click one or more to
+filter, **Clear filter** to see everything again. The filter only hides cards:
+the step and flow progress still count every ticket, and as tickets change
+state during the run they appear and disappear on their own. A step with no
+matching ticket is dimmed but stays where it is, so you can still drop tickets
+into it — a ticket dropped between visible cards lands in the right place among
+the hidden ones too. A ticket just added to a step is **Waiting**, so with a
+filter that leaves that state out it disappears from view until you clear it.
+Each flow remembers its own filter.
 
 ## Agent Profile
 

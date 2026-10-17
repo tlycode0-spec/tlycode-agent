@@ -21,6 +21,7 @@ Each request must include the `X-Project-Path` header so the server knows which 
 | `create_chat_session` | Create a new chat session |
 | `get_chat_messages` | Get messages from a chat session |
 | `add_chat_message` | Add a message (role: user or assistant). A `user` message is also queued for that session's agent and delivered in the prompt of its next run — no run is started (use `send_prompt` for that); pass `deliver_to_agent: false` to only write it into the transcript |
+| `add_assistant_attachment` | Upload an image (or other file) into a session so it can be shown in a message. Pass exactly one source: `file_path` — an existing file inside the project or the session's worktree, copied in without its bytes passing through the agent's output (preferred for screenshots and rendered charts) — or `data_base64`. Returns the attachment `id`, shown via `add_chat_message` (`attachment_ids`, or `![alt](tlycode-att://<id>)` inline) |
 | `delete_chat_session` | Delete a chat session |
 | `archive_chat_session` | Archive a session or bring it back. The kanban cards linked to it follow by default (and leave any flow plans); `archive_linked_ticket: false` puts away only the conversation and leaves the card on the board |
 | `search_archived_chat_sessions` | Search archived sessions by title, by message content, or both (`in_title`, `in_messages`). Each hit reports `message_matches`, not the messages themselves; without a query it lists the archive |
