@@ -8,7 +8,7 @@ On first launch, TlyCode Agent checks that required tools are installed:
 - **Node.js** — required by Claude CLI
 - **GitHub CLI** — for Git authentication (optional)
 
-The system check also detects Gemini CLI, Codex CLI, and Copilot CLI if installed. If all required tools are present and authenticated, the check passes automatically. Otherwise, you can authenticate directly from the check screen or click **Skip**.
+The system check also detects Gemini CLI, Codex CLI, OpenCode CLI, and Copilot CLI if installed. OpenCode CLI is optional and never blocks the check; sign in with `opencode auth login` in a terminal. If all required tools are present and authenticated, the check passes automatically. Otherwise, you can authenticate directly from the check screen or click **Skip**.
 
 ## Selecting a Project
 

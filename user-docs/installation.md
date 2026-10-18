@@ -46,8 +46,27 @@ The following tools should be installed on the system where TlyCode Agent runs:
 - **Claude CLI** — `npm install -g @anthropic-ai/claude-code`
 - **Node.js** — [nodejs.org](https://nodejs.org/)
 - **GitHub CLI** (optional) — [cli.github.com](https://cli.github.com/)
+- **OpenCode CLI** (optional) — see below
 
 The application checks for these tools on first launch (System Check).
+
+### OpenCode CLI (optional)
+
+Install with any of:
+
+```bash
+curl -fsSL https://opencode.ai/install | bash   # installs to ~/.opencode/bin
+npm i -g opencode-ai
+brew install anomalyco/tap/opencode
+```
+
+Then sign in to a provider:
+
+```bash
+opencode auth login
+```
+
+Select **OpenCode CLI** in Settings → Agent → CLI Agent.
 
 ## Building from Source
 

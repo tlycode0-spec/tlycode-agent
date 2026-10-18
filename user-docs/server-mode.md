@@ -36,9 +36,10 @@ Open `http://localhost:8080` in your browser to use the application.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `TLYCODE_LMSTUDIO_URL` | `http://127.0.0.1:1234/v1` | Fallback OpenAI-compatible LM Studio endpoint for the TlyCode Local Agent, the model picker and the system check |
+| `TLYCODE_LMSTUDIO_URL` | `http://127.0.0.1:1234/v1` | Fallback LM Studio endpoint for the LM Studio agent, the model picker and the system check. Given with `/v1`; the agent derives the native `/api/v1` from it |
+| `LM_API_TOKEN` | — | LM Studio's API token, when its API authentication is on. A project's env variable or a group secret takes precedence |
 
-The TlyCode Local Agent runs inside the server process, so it reaches LM Studio
+The LM Studio agent runs inside the server process, so it reaches LM Studio
 over the server's own network. When the server does not share a loopback with LM
 Studio, point it at the right host:
 
@@ -49,6 +50,15 @@ TLYCODE_LMSTUDIO_URL=http://host.docker.internal:1234/v1 ./tlycode-agent-server 
 # LM Studio on another machine (enable "Serve on Local Network" in LM Studio)
 TLYCODE_LMSTUDIO_URL=http://192.168.1.10:1234/v1 ./tlycode-agent-server --port 8080
 ```
+
+### LM Studio requirements
+
+- LM Studio **0.4 or newer** — the agent uses its native chat API `POST /api/v1/chat`.
+- **Allow per-request MCPs** on in LM Studio's server settings, so the model gets its tools.
+- With LM Studio's API authentication on, an API token in `LM_API_TOKEN` or in the group secret.
+
+Everything else about the agent (tools, limits, stored conversations) is in
+[Settings → LM Studio](./settings.md#lm-studio).
 
 ### Per-project host and port
 
@@ -66,7 +76,7 @@ point at their own machine, and an admin can pin them for a group under
 
 ### What a remote endpoint cannot do
 
-Only the OpenAI-compatible HTTP API travels over the network. Model management
+Only LM Studio's HTTP API travels over the network. Model management
 (start server, load / unload, download) goes through the `lms` CLI, which drives
 LM Studio on the machine running tlycode and nothing else. With a non-loopback
 host configured:
@@ -75,6 +85,10 @@ host configured:
   (i.e. its *loaded* models) instead of what `lms ls` finds locally,
 - the `lms`-only controls are hidden, and models are loaded in LM Studio on that
   host,
+- the agent runs **without tools**. LM Studio itself calls the tool endpoint of
+  the tlycode server (`http://127.0.0.1:<port>/mcp/agent-tools`), which only
+  works when both run on the same machine — not from a container's host or
+  another computer,
 - the system check still probes the env / default endpoint, because it runs
   before a project — and therefore a per-project setting — is known.
 
@@ -130,6 +144,27 @@ RUN apt-get update && apt-get install -y nodejs npm git && \
 EXPOSE 8080
 CMD ["tlycode-agent-server", "--port", "8080"]
 ```
+
+### Docker Runner
+
+When a project runs its prompts inside the Docker runner image, the CLI agents (Claude, Gemini, Codex, OpenCode, Copilot) come preinstalled in the image. Credentials live in named Docker volumes so they survive container restarts:
+
+| CLI | Volume | Mounted at |
+|-----|--------|------------|
+| Claude | `tlycode-runner-auth` | `/root/.claude` |
+| Gemini | `tlycode-runner-gemini` | `/root/.gemini` |
+| Codex | `tlycode-runner-codex` | `/root/.codex` |
+| OpenCode | `tlycode-runner-opencode-data` | `/root/.local/share/opencode` (credentials, sessions) |
+| OpenCode | `tlycode-runner-opencode-config` | `/root/.config/opencode` (config, MCP servers) |
+
+Seed the credentials once with an interactive login inside a disposable container:
+
+```bash
+sh scripts/tlycode-runner-login.sh            # Claude
+sh scripts/tlycode-runner-login.sh opencode   # OpenCode (runs `opencode auth login`)
+```
+
+Remove a volume with `docker volume rm <name>` to reset the login.
 
 ### Reverse Proxy (nginx)
 

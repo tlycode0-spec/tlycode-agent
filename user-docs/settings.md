@@ -20,7 +20,41 @@ Controls how Claude handles file modifications and command execution:
 
 ## CLI Agent
 
-Select which CLI agent to use for AI operations. Default is **Claude CLI** (`claude`). Other supported agents (if installed) include Gemini CLI, Codex CLI, and Copilot CLI.
+Select which CLI agent to use for AI operations. Default is **Claude CLI** (`claude`). Other supported agents (if installed) include Gemini CLI, Codex CLI, OpenCode CLI, and Copilot CLI. **LM Studio** runs a local model without any CLI — see [LM Studio](#lm-studio) below.
+
+### OpenCode CLI
+
+[OpenCode](https://opencode.ai) is a provider-agnostic CLI agent. Notes specific to it:
+
+- **Sign-in** — OpenCode manages provider credentials itself. Run `opencode auth login` in a terminal; TlyCode Agent does not ask for API keys.
+- **Model** — entered as `provider/model` (e.g. `anthropic/claude-sonnet-4-5`). The field suggests models reported by `opencode models` but accepts any value. Leave it empty to use the default model from your OpenCode configuration.
+- **Permission mode** — **Plan** runs the OpenCode `plan` agent (read-only); every other mode runs with `--auto`. Rules denied in your OpenCode config stay denied.
+- **MCP servers** — servers configured in TlyCode Agent are also synced to `~/.config/opencode/opencode.json` (section `mcp`); other keys in that file are preserved.
+- **Streaming** — response text arrives in chunks per agent step, not token by token.
+
+### LM Studio
+
+The **LM Studio** agent chats with a model served by [LM Studio](https://lmstudio.ai) through its native chat API (`POST /api/v1/chat`). LM Studio runs the tool loop itself; TlyCode Agent hands it the tools over MCP and streams the answer token by token.
+
+- **Requirements**
+  - LM Studio **0.4 or newer** with its server running.
+  - **Allow per-request MCPs** switched on in LM Studio's server settings — without it the model gets no tools.
+  - A model that supports tool calling. The model picker only lists such models.
+  - The **System Check** reports a missing server, an old version, the per-request MCP switch and a missing API token.
+- **Model, host and port** — the model comes from LM Studio and is loaded on the first request if it is not loaded yet. LM Studio runs on `127.0.0.1:1234` unless you set *Model host* and *Port* — see [Per-project host and port](./server-mode.md#per-project-host-and-port).
+- **API token** — when LM Studio requires an API token, put it into the `LM_API_TOKEN` environment variable of the project (or of the process running TlyCode Agent). In server mode an admin can also store it as a group secret.
+- **Tools** — the model can read, write and search files, run shell commands and keep a todo list. It also gets a selection of the built-in tlycode-agent MCP tools (kanban tickets and comments, docs, skills, everyday git). Both are served by TlyCode Agent's own MCP server and **LM Studio calls them itself**, so:
+  - tools only work when LM Studio runs **on the same machine** as TlyCode Agent (the desktop app or the server process),
+  - with a remote host the agent is a plain chat without tools, and its first answer says so.
+  - There is no "ask the user" tool — the model asks in its answer and you reply in the next message.
+- **Permission mode** — **Plan** offers read-only tools only. Every other mode gives the model full file and shell access **without per-call approvals**, so use it in trusted projects only.
+- **Limits**
+  - A single tool call may currently take about **60 seconds** — LM Studio's fixed timeout. TlyCode Agent stops a tool after 50 s and returns its partial output. Run long commands (builds, test suites) in the background with their output redirected to a file (`cmd > /tmp/out.log 2>&1 &`) and let the model read the file later.
+  - When the conversation outgrows the model's **context length**, LM Studio ends the turn without an error of its own; the chat then shows that the response ended without a result. Raise the context length or start a new chat.
+  - A turn stops after **50 tool calls** (setting `agent_local_max_iterations`, `0` = no limit). LM Studio has no limit of its own and a model can loop on tools until its context overflows.
+- **Conversation** — after the first message only the new message is sent; LM Studio continues the conversation it stored (`previous_response_id`). The full history is sent again when that is not possible: after a change of model, host, context length, persona, skill or language, after you delete or edit a message, after a failed turn, or when LM Studio no longer knows the conversation.
+- **Privacy** — LM Studio stores every conversation, including tool output, **for 30 days** on the disk of the machine it runs on, in `~/.lmstudio/.internal/api-prediction-history`.
+- **Images** — image attachments are sent to the model directly, so a vision model can see them.
 
 ## Launch at Startup
 
