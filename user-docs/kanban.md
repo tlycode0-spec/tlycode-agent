@@ -95,12 +95,13 @@ closes.
 **Right column:**
 
 - **Status** — the ticket's column as a coloured dropdown (grey for the first column, green for the last, blue in between). Picking another column moves the ticket there, with the same column prompt as a move on the board. While the agent is responding in the linked session the move is refused.
-- **Run** — starts the ticket in a new chat session and opens it, see *Running a Ticket*.
-- **Open chat** — opens the linked chat session.
+- **Run** — sends the ticket to its chat session and opens it, see *Running a Ticket*.
+- **New session** — shown while the ticket has no chat session: creates one linked to the ticket and opens it with the ticket's text pre-filled in the message input. Nothing is sent — edit the text and send it yourself.
+- **Open chat** — shown instead of **New session** once the ticket has a session: opens it. A ticket has at most one chat session.
 - **Details** (collapsible; the dialog remembers whether it is collapsed) — one `label | value` row per parameter; an empty value shows a grey *Add…*, click it to fill it in:
   - **Persona / skill** — attach a persona or a skill to use as context when running the ticket
   - **Worktree** — the git worktree the ticket's session works in; **+** creates a new one
-  - **Chat session** — the linked session, or link an existing one / **+** create a new one
+  - **Chat session** — the linked session (unlink it with the broken-link button), or link an existing one
   - **Custom fields** — metadata on the ticket, e.g. a Jira ticket number. Two kinds sit side by side:
     - fields the project defines for every ticket (the `ticket_fields` project setting, see [Settings](./settings.md#kanban)), listed with their configured name; whether they reach the card is the project's switch
     - fields you add here with **Add field**, which belong to this ticket alone: click the name and the value to fill them in, flip the switch to put it on the card, and remove it again with the bin. The name is the field's identity, so renaming it carries the value along. After a save they are listed alphabetically by name.
@@ -127,7 +128,7 @@ Both are off until the project defines a ticket field whose source is the sessio
 
 ### Running a Ticket
 
-When a ticket has a description or system prompt, you can run it directly — **Run** in the ticket dialog (or the `run_ticket` MCP tool) creates a new chat session linked to the ticket, sends the description as the first prompt with the ticket's persona or skill, and opens the chat. Run is off while the agent is responding in the ticket's linked session.
+When a ticket has a description or system prompt, you can run it directly — **Run** in the ticket dialog (or the `run_ticket` MCP tool) sends the description as a prompt with the ticket's persona or skill into the ticket's chat session and opens the chat. A ticket has at most one session: Run uses the one it is linked to and creates it only when there is none. The prompt appears once in the chat history; it is not left in the message input (a text of your own in the input stays). The project's opening prompt goes with it only into a session nothing has been said in yet. Run is off while the agent is responding in the ticket's session.
 
 ## Search
 
