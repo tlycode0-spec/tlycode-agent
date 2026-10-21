@@ -121,3 +121,19 @@ When Claude makes code changes, a **Diff Review Panel** can display the changes 
 ## Session Continuity
 
 Each chat session maintains a Claude CLI session ID. When you reopen a session and send a new message, the conversation continues from where it left off (using `--resume`).
+
+## Session Tools Menu
+
+The **⋯** button in the chat header (next to *Agent settings*) opens the session tools:
+
+- **Session info**: the tlycode **Session ID** and the agent CLI's own session ID (**Claude / Codex / Gemini / OpenCode / Copilot session ID**, the one passed to `--resume`). Each has a copy button. The CLI session ID appears with the agent's first answer; before that the menu says it has not been created yet. LM Studio sessions have no CLI session ID.
+- **Claude Remote session** (desktop app, Claude CLI sessions only): shares the conversation through Claude Code [Remote Control](https://code.claude.com/docs/en/remote-control) and opens it at claude.ai/code, so you can continue from a browser or the Claude mobile app. Claude still runs on your machine, in the session's folder (its worktree, or the project).
+
+### Claude Remote session
+
+- **Requirements**: Claude CLI signed in with a claude.ai account (Pro, Max, Team or Enterprise; on Team/Enterprise an admin has to enable Remote Control). API keys, `ANTHROPIC_BASE_URL` gateways, Bedrock/Vertex and long-lived `setup-token` tokens do not work. The session needs a Claude session ID, so send the first message before sharing.
+- **While shared**: the **⋯** button shows a green dot and a banner above the input offers **Open** and **Stop sharing**. tlycode does not send prompts to the session meanwhile — the send button is disabled, and prompts from MCP, flows or the scheduler wait in the queue until sharing stops — so the web and tlycode never write the same conversation at once.
+- **Stop sharing**: from the banner or the menu. The messages written on the web are then added to the chat (text only, without tool calls), behind a line *Added from Claude Remote Control*. If they cannot be read, a warning line says the history may be incomplete; the next prompt still continues the whole conversation, because Claude has it. Queued prompts run afterwards.
+- Sharing also stops when you delete or archive the session, switch it to another CLI or worktree, or quit the app.
+- If the start fails, an error explains why (not signed in, API key in use, organization policy, outdated CLI, network…); *Claude CLI output* shows what the CLI printed.
+- In server mode the item is disabled.

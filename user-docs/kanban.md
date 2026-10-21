@@ -45,6 +45,14 @@ By default, three columns are created: **To Do**, **In Progress**, **Done**.
 ## Tickets
 
 - Click **Add ticket** (+ button) on a column to create a new ticket
+- Every ticket has a short **key** such as `#42`, shown in grey in the card's
+  top right corner, in the ticket dialog's header ("Ticket #42 / To Do") and on
+  the cards of the Flow Manager. Click it to copy it. The number counts up per
+  project and never changes: moving the ticket between columns or boards,
+  archiving it or sending it to the backlog keeps it. Use it when you talk to
+  an agent: "move #42 to Test" or "update ticket #42" is enough, the agent's
+  tools find the ticket by its key. The full ticket ID (UUID) can be copied
+  from the **⋯** menu of the ticket dialog.
 - A card's actions are icons — hover one for its name. The pencil opens the
   ticket dialog, the speech bubble jumps to the linked chat session (it spins
   while that session's agent is answering), and the arrow-into-a-box is the
@@ -147,6 +155,10 @@ independent and a card matches if any of them does:
 
 Title and description are on by default, session title is off; the choice is
 remembered. At least one has to stay on.
+
+Typing a ticket key — `#42`, or just `42` — also finds the ticket with that key,
+whichever of the choices are on. The ticket list of the Flow Manager finds
+tickets by their key the same way.
 
 Searching looks for cards whose text *contains* what you typed, ignoring case,
 and the whole board is searched — not just the cards already loaded. Archived
@@ -379,6 +391,86 @@ show up as an answer to nothing. If the session is still empty, the prompt also
 carries the profile's first-message opening.
 
 While the agent is responding in a ticket's chat session, that ticket cannot be moved into a column whose prompt would then land in the running session — the board says so and leaves the card where it was. Every other move goes through: reordering inside a column, and moving into a column that has no prompt configured. The switch next to **Column prompts** turns the prompts off altogether, and with them this restriction.
+
+## Sync from Jira
+
+A board can follow a Jira instance: Jira sends a webhook on every issue change
+and TlyCode applies it to the board's cards. It is set up in **Settings →
+Kanban** ([Settings → Kanban](settings.md#kanban)), separately for each board,
+and works in the desktop app and in server mode (not in the cloud edition).
+
+What the sync does, each event behind its own checkbox:
+
+| Jira event | On the board |
+|---|---|
+| Issue created | A new card in the default column (or the board's first column). The card's description starts with a link to the issue; the issue key goes into the `jira` ticket field. |
+| Summary / description changed | The card's title and description are rewritten. Its system prompt, skill, persona and worktree stay. |
+| Status changed | The card moves to the column mapped to the new status. Without a mapping, to the column with the same name; without one of those, it stays. |
+| Issue deleted | The card is archived (it can be restored from the archive). |
+| Comment created | A ticket comment headed with the author and a link to the comment. |
+| Comment edited / deleted | That comment is rewritten / deleted from the ticket. |
+
+Only issues the sync created a card for are updated. Deliveries arriving twice
+or out of order are ignored.
+
+### Setting it up
+
+1. **In TlyCode**, open Settings → Kanban, pick the board, switch the sync on,
+   choose the events, the default column and the status mapping, and **Save**.
+   The first save creates the **webhook URL**: copy it.
+2. **Make the URL reachable from Jira** (see below). Swap the host of the
+   copied URL for that address and keep the path (`/webhooks/jira/<token>`).
+3. **In Jira** (Jira Cloud: *Settings → System → WebHooks → Create a
+   WebHook*; Jira Server / Data Center: *Administration → System →
+   WebHooks*):
+   - **URL**: the webhook URL from step 2.
+   - **Secret** (optional, recommended): any random string; put the same one
+     into **Webhook secret (HMAC)** in TlyCode and save. Deliveries without a
+     valid signature are then refused with `401`.
+   - **Events**: *Issue* → created, updated, deleted; *Comment* → created,
+     updated, deleted. Only tick what you also ticked in TlyCode.
+   - **JQL filter** (optional), e.g. `project = LMS AND type != Epic`. This is
+     the best place to narrow down what comes over; the **Only Jira projects**
+     field in TlyCode is a coarse second filter by project key.
+4. **Check it**: create or change an issue. The **Webhook server** card in
+   Settings → Kanban shows the last delivery (HTTP status and result) and the
+   board's own last delivery appears under its URL. Jira's webhook page also
+   lists failed deliveries.
+
+### Making the URL reachable
+
+- **Desktop + Jira Cloud.** The listener binds to `127.0.0.1:45893`, which
+  Jira Cloud cannot reach. Put a tunnel in front of it, for example:
+  - `tailscale funnel 45893`,
+  - `cloudflared tunnel --url http://127.0.0.1:45893`,
+  - `ngrok http 45893`.
+
+  Then use the tunnel's public address with the same path. The tunnel has to
+  run whenever Jira should deliver; deliveries missed meanwhile are not
+  replayed.
+- **Desktop + Jira Server / Data Center on your network.** Switch the bind to
+  `0.0.0.0` in the Webhook server card and use the computer's network address
+  (`http://192.168.1.20:45893/webhooks/jira/<token>`). The port is then open to
+  the whole network, guarded by the token in the URL and the secret.
+- **Server mode.** The URL on the server's **main port** works directly
+  wherever the server has a public address (behind a reverse proxy too). The
+  listener on port `45893` is an alternative if you want webhooks on a port of
+  their own.
+
+**Generate a new token** when the URL may have leaked. The old URL stops
+working immediately, so update the webhook in Jira.
+
+### What it deliberately does not do
+
+- **One way only**: Jira → kanban. Moving a card, editing it or commenting on
+  it in TlyCode changes nothing in Jira (an agent with the built-in Jira MCP
+  server can do that).
+- **No backfill**: existing issues do not come over, only changes from the
+  moment the webhook exists.
+- Attachments, worklogs, sprints, links between issues, assignee, priority and
+  Jira's custom fields are not synced.
+- **Column prompts are off by default.** Turned on, every card the sync moves
+  fires its column's prompt. A bulk move in Jira can start dozens of agents.
 
 ## Cross-Navigation with Chat
 

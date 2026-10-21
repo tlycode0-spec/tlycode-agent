@@ -96,8 +96,36 @@ switch.
 
 ## Kanban
 
-The tab is empty: the Kanban board has no settings of its own at the moment.
-More will land here.
+The tab holds the **Jira sync**: Jira sends issue changes to TlyCode over a
+webhook and they show up as cards on a board. How to set up the webhook in
+Jira step by step is in [Kanban → Sync from Jira](kanban.md#sync-from-jira).
+The cloud edition has no webhooks; the tab only says so there.
+
+- **Sync from Jira** (per board). Pick the board when the project has more
+  than one. Then set:
+  - the main switch,
+  - which of the six events to apply,
+  - the default column for new issues,
+  - the Jira status → column mapping,
+  - a project key filter,
+  - the HMAC secret,
+  - whether moves fire column prompts.
+
+  **Save** stores it. The first save creates the webhook URL with its token,
+  which you copy from here. **Generate a new token** replaces it after a
+  confirmation; the old URL stops working at once. The secret is never shown
+  again after saving: leave the field empty to keep it, or use **Remove
+  secret**. Below the URL is the time and error of the board's last delivery.
+- **Webhook server** (global, for every project). The port (default `45893`)
+  and the address the listener binds to: `127.0.0.1` (this computer only) or
+  `0.0.0.0` (every interface). **Apply** moves the listener without
+  restarting the app. On a server only an administrator can change these.
+  - The card shows whether the listener runs, why it could not start (port
+    taken, …) and the last delivery since the app started.
+  - A note under it says what can reach the listener with this bind. A
+    desktop needs a tunnel for Jira Cloud; Jira Server on your network needs
+    `0.0.0.0`. A server with a public URL takes deliveries on its main port
+    anyway.
 
 ### Custom ticket fields, without the editor
 
