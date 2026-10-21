@@ -6,6 +6,16 @@
 
 Select the language for the UI. Available: Czech (Čeština) and English.
 
+## UI Scale
+
+Text and controls can be made larger or smaller — 80 % to 200 % in 10 % steps, 100 % by default. There are two levels:
+
+- **App scale (Settings → Application):** the slider, the −/+ buttons or **Default (100 %)** set the scale of every app window. It applies immediately and is kept after a restart.
+- **Window scale (top bar):** the magnifier icon next to the keyboard shortcuts changes only the current window (−/+ in a small popup). **Use app scale (X %)** returns the window to the app scale. A window with its own scale ignores later changes of the app scale. The main window keeps its own scale after a restart; other windows keep it while they're open.
+- **Shortcuts:** Cmd/Ctrl + `=` (or `+`) and Cmd/Ctrl + `-` change the current window's scale, Cmd/Ctrl + `0` returns it to the app scale. The numpad `+`, `−` and `0` keys work too. Shortcuts follow the physical key position like all app shortcuts, so on a Czech layout zoom in is the `´` key and zoom out the `=` key (or use the numpad).
+- **Webview windows:** their toolbar follows the app scale; the web page inside is left at 100 %.
+- **Server mode (browser):** the app doesn't scale itself there — use the browser's own zoom (Cmd/Ctrl + `+`/`-`/`0`), which the browser remembers for the address.
+
 ## Agent Language
 
 Select the language Claude will use in responses. This is independent of the UI language.

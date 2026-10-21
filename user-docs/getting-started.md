@@ -54,3 +54,15 @@ The top toolbar contains:
 - **Settings** (gear icon) — application configuration
 - **Theme** (sun/moon icon) — switch between light, dark, and system theme
 - **Report a Bug** — link to GitHub issues
+- **New window** (desktop) — opens another app window with the current project
+
+### Multiple Windows (desktop)
+
+You can work in several app windows at once — for example two projects on two monitors, or the kanban in one window and the chat in another:
+
+- **New window** button in the toolbar, **New window** in the project menu, or **Cmd/Ctrl + Shift + N** — opens a window with the current project.
+- Right-click a project tab → **Open in new window** — opens a window with that project.
+
+Each window has its own active project, project tabs and view; switching the project in one window doesn't change the others. Chat messages, streaming answers, the kanban and runs update live in every window showing the same project. A message draft typed in one window shows up in another window with the same chat once saved, unless you are typing there too.
+
+Closing a window leaves the others running. The first (main) window is only hidden when closed — the app keeps running in the tray / Dock and **Show** brings back the last used window. Extra windows aren't restored after restarting the app.
