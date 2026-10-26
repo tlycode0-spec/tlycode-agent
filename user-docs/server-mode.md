@@ -111,6 +111,34 @@ The server binary is self-contained:
 | System tray | Yes | No |
 | Autostart | Available | Not applicable |
 | Multiple users | Single user | Can serve multiple browsers |
+| Keyboard shortcuts | ⌘ / Ctrl based | Browser-safe set, see below |
+
+### Keyboard shortcuts in the browser
+
+The browser keeps most ⌘ / Ctrl shortcuts for itself (⌘N opens a new browser
+window, ⌘1–8 switch browser tabs, ⌘⇧T reopens a closed tab …). In server mode
+the app therefore uses a different set for those shortcuts:
+
+| Action | Desktop (macOS) | Browser on macOS | Browser on Windows / Linux |
+|--------|-----------------|------------------|----------------------------|
+| Go to section 1–8 | ⌘1–⌘8 | ⌃1–⌃8 | Alt+Shift+1–8 |
+| Next / previous project tab | ⌘⌥→ / ⌘⌥← | ⌃⌥→ / ⌃⌥← | Ctrl+Alt+→ / ← |
+| Settings | ⌘, | ⌃, | Ctrl+, |
+| Toggle theme | ⌘⇧L | ⌃⇧L | Ctrl+Shift+L |
+| Switch project | ⌘⇧O | ⌃⇧O | Alt+Shift+O |
+| New chat | ⌘N | ⌃N | Alt+N |
+| New ticket / new column | ⌘⇧T / ⌘⇧C | ⌃⇧T / ⌃⇧C | Alt+Shift+T / Alt+Shift+C |
+| New document | ⌘⌥N | ⌃⌥N | Alt+Shift+N |
+| New persona / new skill | ⌘⇧K / ⌘⇧J | ⌃⇧K / ⌃⇧J | Alt+Shift+K / Alt+Shift+J |
+
+Search (⌘F / Ctrl+F), save (⌘S / Ctrl+S), undo / redo and F1 stay the same.
+A new app window and window zoom are desktop only — in the browser open a new
+tab and use the browser's zoom. Press **F1** to see the shortcuts that apply
+where you are.
+
+If you turned on *Switch to Desktop 1–9* (⌃1–⌃9) in macOS System Settings →
+Keyboard → Keyboard Shortcuts → Mission Control, macOS takes those keys before
+the browser and section navigation will not work.
 
 ## WebSocket Events
 

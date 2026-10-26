@@ -96,36 +96,64 @@ switch.
 
 ## Kanban
 
-The tab holds the **Jira sync**: Jira sends issue changes to TlyCode over a
-webhook and they show up as cards on a board. How to set up the webhook in
-Jira step by step is in [Kanban → Sync from Jira](kanban.md#sync-from-jira).
-The cloud edition has no webhooks; the tab only says so there.
+The tab holds the **Jira sync**: issue changes come to TlyCode over a webhook,
+or TlyCode polls them from the Jira REST API, and they show up as cards on a
+board. Step by step, and which method to pick, is in
+[Kanban → Sync from Jira](kanban.md#sync-from-jira). The cloud edition has no
+Jira sync; the tab only says so there.
 
-- **Sync from Jira** (per board). Pick the board when the project has more
-  than one. Then set:
-  - the main switch,
-  - which of the six events to apply,
-  - the default column for new issues,
-  - the Jira status → column mapping,
-  - a project key filter,
-  - the HMAC secret,
-  - whether moves fire column prompts.
-
-  **Save** stores it. The first save creates the webhook URL with its token,
-  which you copy from here. **Generate a new token** replaces it after a
-  confirmation; the old URL stops working at once. The secret is never shown
-  again after saving: leave the field empty to keep it, or use **Remove
-  secret**. Below the URL is the time and error of the board's last delivery.
 - **Webhook server** (global, for every project). The port (default `45893`)
   and the address the listener binds to: `127.0.0.1` (this computer only) or
   `0.0.0.0` (every interface). **Apply** moves the listener without
   restarting the app. On a server only an administrator can change these.
   - The card shows whether the listener runs, why it could not start (port
-    taken, …) and the last delivery since the app started.
+    taken, …) and the last delivery since the app started, with the sync it
+    went to.
   - A note under it says what can reach the listener with this bind. A
     desktop needs a tunnel for Jira Cloud; Jira Server on your network needs
     `0.0.0.0`. A server with a public URL takes deliveries on its main port
-    anyway.
+    anyway. Syncs using API polling do not need the listener.
+- **Sync from Jira** (per board). Pick the board when the project has more
+  than one. The list opens on the board you came from (the sync icon on a
+  board), otherwise on the first board with a running sync. The board picker
+  shows how many syncs each board has ("Jira · active: 1"); a board without a
+  sync lists the boards that have one, with a button to switch. The board's
+  syncs are listed as collapsible cards; the header of each shows its name,
+  whether it is on, and its last delivery or error (for polling: the last
+  fetch and how many issues it processed). The webhook server's "No delivery"
+  line only concerns syncs in webhook mode.
+  **Add sync** adds another one (two Jira instances, two teams; see
+  [Several syncs on one board](kanban.md#several-syncs-on-one-board)). In each
+  sync, set:
+  - its name,
+  - the main switch,
+  - the **sync method**: *Webhook* or *API polling*. For polling: the Jira
+    Base URL, e-mail (Jira Cloud only), API token, API version, interval in
+    minutes and optional JQL. **Take from the Jira MCP preset** fills them in
+    from the project's Jira MCP server. **Test connection** shows the account
+    and how many issues the query finds, or what is wrong. The polling status
+    (last fetch, issues processed, last error, next fetch) and **Sync now**
+    are below. The webhook URL and secret are hidden in this mode,
+  - which of the six events to apply,
+  - the default column for new issues,
+  - the Jira status → column mapping,
+  - project key, assignee and sprint filters,
+  - the HMAC secret (webhook only),
+  - whether moves fire column prompts.
+
+  **Save** stores it. The first save creates the sync's webhook URL with its
+  token, which you copy from here. **Generate a new token** replaces it after
+  a confirmation; the old URL stops working at once. The secret and the API
+  token are never shown again after saving: leave the field empty to keep
+  them, or use **Remove secret** / **Remove token**. **Delete sync** removes it after a confirmation: its URL
+  stops working, the cards it created stay.
+
+  **Log** at the top of a saved sync opens its log: every webhook delivery
+  and every poll with what it did to the cards, filterable and with links to
+  the card and the Jira issue. Next to it, the last 24 hours in numbers. See
+  [The sync log](kanban.md#the-sync-log). **Sync logs** below the list sets how
+  many entries (default 1000) and how many days (default 30) each sync keeps
+  (on the server, admins only).
 
 ### Custom ticket fields, without the editor
 

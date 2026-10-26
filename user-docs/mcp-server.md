@@ -26,6 +26,7 @@ Each request must include the `X-Project-Path` header so the server knows which 
 | `archive_chat_session` | Archive a session or bring it back. The kanban cards linked to it follow by default (and leave any flow plans); `archive_linked_ticket: false` puts away only the conversation and leaves the card on the board |
 | `search_archived_chat_sessions` | Search archived sessions by title, by message content, or both (`in_title`, `in_messages`). Each hit reports `message_matches`, not the messages themselves; without a query it lists the archive |
 | `search_chat_messages` | Find the messages of one session containing a text and return a snippet around each match, not the whole message |
+| `star_chat_session` | Star a session (it stays at the top of the session list) or remove the star with `starred: false` |
 | `rename_chat_session` | Rename a chat session |
 
 ### Kanban (12 tools)
@@ -59,13 +60,14 @@ Each request must include the `X-Project-Path` header so the server knows which 
 
 | Tool | Description |
 |---|---|
-| `list_kanban_flows` | List the project's flows with status and progress |
+| `list_kanban_flows` | List the project's flows with status and progress (archived ones only with `include_archived`) |
 | `get_kanban_flow` | One flow with its steps and the state of every ticket |
 | `get_kanban_flow_log` | The run log: start/stop/reset, dispatches, failures |
 | `get_kanban_flow_usage` | What the run cost: tokens and time per ticket, per step and in total |
 | `create_kanban_flow` | Create an empty flow |
 | `update_kanban_flow` | Rename a flow, or change its description / stop-on-error |
 | `delete_kanban_flow` | Delete a flow (refused while it runs) |
+| `archive_kanban_flow` | Archive or restore a flow (hidden from the list, kept with its steps, tickets and log; refused while it runs; an archived flow cannot be started) |
 | `create_flow_step` | Add a step (sequential/parallel, own/shared session, the column that finishes a ticket, pause after the step) |
 | `update_flow_step` | Rename a step or change how it runs (while the flow runs, only a step it has not got to yet) |
 | `delete_flow_step` | Delete a step (while the flow runs, only a step it has not got to yet) |
@@ -85,7 +87,14 @@ A step makes no worktrees: each ticket runs in the directory set on the ticket
 the job of the agent profile's skills. Beyond its order and modes, a step has
 these settings. `done_column` names the board column a ticket has to reach before the
 step counts it as finished — for boards whose columns send prompts of their
-own, where the first agent run is only the opening move. `pause_after` stops
+own, where the first agent run is only the opening move. `enforce_done_column`
+(with `done_column`, Claude and Codex agents) keeps the agent from ending its
+turn while the ticket is still in the column it started in: it is reminded to
+move it, at most twice, and then the ticket fails at once. `gate_command`
+(Claude and Codex agents) is a check such as `cargo check` the app runs in the
+ticket's worktree whenever the agent wants to end its turn: while it fails the
+agent is sent back with its output, and after `gate_max_attempts` failures
+(default 3) the ticket fails. `pause_after` stops
 the run once the step is done instead of starting the next one — the way to try
 a single step out — and a later start carries on from the step that follows.
 `prompt_profile` names an agent profile of the flow's project (`list_agent_profiles`) that replaces

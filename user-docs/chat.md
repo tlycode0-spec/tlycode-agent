@@ -11,9 +11,20 @@ The left sidebar shows your chat sessions:
 - Click **+ New Chat** to create a new session
 - Click a session to open it
 - Use the **search bar** to find sessions (see [Search](#search))
-- Filter by type: **All**, **User**, **Scheduler**, **Archive**
+- Filter by type: **All**, **Favorites** (★), **User**, **Scheduler**, **Archive**
 - Active sessions (with ongoing AI responses) show a spinner indicator — even across projects
-- Right-click or use the menu to rename, archive, or delete a session
+- Right-click or use the menu to star, rename, archive, or delete a session
+- Drag a session by its handle to reorder the list
+
+### Favorites
+
+Click the **star** on a session's row to keep it at the top of the list. An unstarred session shows a muted outline that brightens on hover; a starred one shows a filled star. Clicking it does not open the session. The row's menu has **Add to favorites** / **Remove from favorites** too. The star in the chat header does the same for the open session, and a second click removes it.
+
+- Starred sessions are always listed above the others, under a **Favorites** title, whatever sessions are created or updated meanwhile. A new star goes to the top of them.
+- The **Favorites** filter shows only the starred sessions. Search keeps them first too.
+- Drag sessions to reorder them within their group; dropping a starred session among the others (or the other way round) changes nothing.
+- Stars are your own: in [server mode](server-mode.md) every user keeps their own favorites, also on sessions shared through a group, and nobody else's list changes.
+- An archived session keeps its star (it is shown first in the **Archive** filter) and is back among the favorites once restored. Deleting a session removes its star.
 
 ## Search
 
@@ -124,7 +135,7 @@ Each chat session maintains a Claude CLI session ID. When you reopen a session a
 
 ## Session Tools Menu
 
-The **⋯** button in the chat header (next to *Agent settings*) opens the session tools:
+The **☆** button next to it stars or unstars the open session (see [Favorites](#favorites)). The **⋯** button in the chat header (next to *Agent settings*) opens the session tools:
 
 - **Session info**: the tlycode **Session ID** and the agent CLI's own session ID (**Claude / Codex / Gemini / OpenCode / Copilot session ID**, the one passed to `--resume`). Each has a copy button. The CLI session ID appears with the agent's first answer; before that the menu says it has not been created yet. LM Studio sessions have no CLI session ID.
 - **Claude Remote session** (desktop app, Claude CLI sessions only): shares the conversation through Claude Code [Remote Control](https://code.claude.com/docs/en/remote-control) and opens it at claude.ai/code, so you can continue from a browser or the Claude mobile app. Claude still runs on your machine, in the session's folder (its worktree, or the project).
@@ -133,7 +144,9 @@ The **⋯** button in the chat header (next to *Agent settings*) opens the sessi
 
 - **Requirements**: Claude CLI signed in with a claude.ai account (Pro, Max, Team or Enterprise; on Team/Enterprise an admin has to enable Remote Control). API keys, `ANTHROPIC_BASE_URL` gateways, Bedrock/Vertex and long-lived `setup-token` tokens do not work. The session needs a Claude session ID, so send the first message before sharing.
 - **While shared**: the **⋯** button shows a green dot and a banner above the input offers **Open** and **Stop sharing**. tlycode does not send prompts to the session meanwhile — the send button is disabled, and prompts from MCP, flows or the scheduler wait in the queue until sharing stops — so the web and tlycode never write the same conversation at once.
-- **Stop sharing**: from the banner or the menu. The messages written on the web are then added to the chat (text only, without tool calls), behind a line *Added from Claude Remote Control*. If they cannot be read, a warning line says the history may be incomplete; the next prompt still continues the whole conversation, because Claude has it. Queued prompts run afterwards.
+- **Messages from the web** show up in the chat as they come (checked every 2 seconds): your prompt right away, Claude's answer once its turn ends. Only text is copied, not tool calls. A line *Added from Claude Remote Control: N message(s)* above them keeps the count.
+- **Stop sharing**: from the banner or the menu. The last messages are added; if the web conversation cannot be read, a warning line says the history may be incomplete. The next prompt still continues the whole conversation, because Claude has it. Queued prompts run afterwards.
 - Sharing also stops when you delete or archive the session, switch it to another CLI or worktree, or quit the app.
+- If Claude CLI reports invalid rules in a settings file (e.g. `mcp__*` in `permissions.allow`), sharing continues without them, as chat turns do. Any other dialog the CLI stops at fails the start with its text shown.
 - If the start fails, an error explains why (not signed in, API key in use, organization policy, outdated CLI, network…); *Claude CLI output* shows what the CLI printed.
 - In server mode the item is disabled.

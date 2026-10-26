@@ -88,7 +88,19 @@ for instance) and writes that order onto the board.
 The ticket dialog is laid out like a Jira issue: the ticket's content on the
 left, its status and parameters on the right. Changes save on their own — there
 is no Save button; whatever is still being typed is saved when the dialog
-closes.
+closes (also when you close the browser tab in server mode; the browser then
+asks before leaving). Ctrl/Cmd+S saves right away, but you never need it.
+
+Next to "Ticket #N / column" the header shows where saving stands:
+**Saving…**, **Saved** (hover for the time), **Not saved · Try again** when a
+save failed (hover for the error; it is retried on its own and nothing you
+typed is lost) or **Not saved — empty title** while the title is empty (the
+other fields still save).
+
+If somebody else — an agent over MCP, another window — changes the ticket while
+the dialog is open, the fields you have not touched update in place. A field
+you changed too is never overwritten silently: the header says **Changed
+elsewhere meanwhile: …** and lets you **Use theirs** or **Keep mine**.
 
 **Header** — the column the ticket is in, the **⋯** menu (*Move to backlog*,
 *Archive*, *Delete* — deleting asks for confirmation) and **✕** to close.
@@ -96,7 +108,8 @@ closes.
 **Left column** (scrolls on its own):
 
 - **Title** — shown as a heading; click it to edit, Enter confirms, Escape restores it.
-- **Description** — rendered as markdown, the same way the chat renders it (tables, code, mermaid diagrams). Click the text or the pencil to edit the raw markdown; **Done**, Escape or clicking away goes back to the preview.
+- **Description** — rendered as markdown, the same way the chat renders it (tables, code, mermaid diagrams). Click the text or the pencil to edit the raw markdown; Escape or clicking away goes back to the preview. There is nothing to confirm — the text saves as you type.
+- **Acceptance criteria** — a checklist under the description, see *Acceptance criteria* below.
 - **Attachments** — **Add** picks files; you can also drop files anywhere on the left column or paste them (e.g. a screenshot) from the clipboard.
 - **Comments** — at the very bottom: a box for a new comment (Ctrl/Cmd+Enter sends), then the comments, newest first, rendered as markdown.
 
@@ -121,9 +134,40 @@ On a narrow window the right column moves under the content and the whole
 dialog scrolls as one.
 
 **New ticket** — the same layout with the title and description open for
-typing. Attachments, comments and the chat session appear once the ticket
-exists. The status picks the column the ticket is created in. **Create** (or
+typing. Acceptance criteria, attachments, comments and the chat session appear
+once the ticket exists. The status picks the column the ticket is created in. **Create** (or
 Ctrl/Cmd+Enter) creates it.
+
+### Acceptance criteria
+
+A ticket keeps its acceptance criteria as a checklist of their own, not as
+bullet points in the description. Each criterion is one line of text that is
+either met or not.
+
+- **Add** — type into *Add a criterion…* under the list and press Enter. The box stays open for the next one. Pasting several lines adds each line as its own criterion; list markers such as `-`, `1.` or `[ ]` are dropped.
+- **Edit** — click a criterion's text. Enter saves it and opens a new item right below it, Escape cancels. Saving an emptied text deletes the criterion.
+- **Tick off** — the checkbox. Done criteria are struck through. A criterion an agent ticked off shows a small robot icon; hover it, or the checkbox, to see when it was done and from which session.
+- **Reorder** — drag the handle on the left of a row.
+- **Delete** — the bin on the right of a row.
+
+Every change is saved at once and shows up in all open windows and browsers.
+The section heading counts the criteria (`3/5`), and the counter turns green
+when all of them are met.
+
+**On the card** — a ticket with criteria shows an **AC 3/5** chip on the board
+and on its card in the Flow Manager. The chip turns green once every
+criterion is met. A ticket without criteria shows no chip.
+
+**Agents** work with the criteria through MCP (`list_ticket_criteria`,
+`set_ticket_criteria`, `add_ticket_criterion`, `update_ticket_criterion`,
+`delete_ticket_criterion`, see [MCP server](../mcp-server.md)). The built-in
+skills tell the agent to write the criteria during analysis (including
+criteria found in an older ticket's description), to tick them off while
+implementing and testing, and to explain in a ticket comment any it cannot
+meet.
+
+Criteria stay with the ticket when it is archived or moved to the backlog,
+and are deleted with it.
 
 ### Session chips
 
@@ -208,8 +252,8 @@ it left.
 
 **A running agent.** Archiving skips a ticket whose agent is answering right
 now and tells you how many were skipped; archive it once the agent is done.
-Tickets moved to the backlog or archive leave their flows the same way a single
-ticket does (see [Flow Manager](#flow-manager)).
+Tickets moved to the backlog leave their flows the same way a single ticket
+does; archived tickets stay in them (see [Flow Manager](#flow-manager)).
 
 ## Flow Manager
 
@@ -240,13 +284,88 @@ Each step decides how its tickets run:
   prompts** switched on in the [agent profile](#agent-profile) — with them off
   nothing would move the ticket on and the step would wait forever — so it is
   greyed out until they are.
+- **Enforce the done column** — with a done column set, the agent may not end
+  its turn while the ticket is still in the column the step started it in.
+  When it tries — most often it simply forgot to move the card — it is told
+  where the ticket is and where the step wants it, and carries on in the same
+  turn. It gets at most two such reminders. If the ticket still has not moved
+  after that, the ticket fails right away with "did not reach the column … even
+  after 2 reminders", instead of waiting an hour for you. A ticket the agent
+  moves to any other column is let go: that column's prompt takes over, as it
+  would without the switch. Off by default, because some runs are meant to wait
+  for you to move the card. Works with **Claude** and **Codex** agents (Codex
+  not on Windows); with other agents the switch does nothing.
+- **Step check** — a command such as `cargo check`, `cargo test -p x` or
+  `npm run build`: the step's Definition of Done. Whenever the agent wants to
+  end its turn, the app runs the command itself in the ticket's worktree (the
+  project when the ticket has none; on a server with the Docker Runner inside
+  the turn's container, where the agent's tools are). It is not part of the
+  prompt, so the agent cannot talk its way past it:
+  - exit code 0 — the agent may stop (and **Enforce the done column**, when on,
+    has its say next),
+  - anything else — the agent is sent back with the last ~4 KB of the output
+    (stdout and stderr) and told to fix it; when it stops again the check runs
+    again,
+  - after **Max. failed checks** failures in one run of the ticket (3 by
+    default, 1–10) the agent is let go and the ticket fails with "The step
+    check failed (…): <last lines of the output>" — even if the agent already
+    moved the card to the done column.
+
+  A check may run for 10 minutes; one that runs longer is killed (with
+  everything it started) and counts as a failure. Every run of the check goes
+  to the run log (**Step check passed** / **Step check failed** with the exit
+  code, the attempt and the end of the output). If the check cannot be started
+  at all (no such directory, the turn was stopped) the agent is let go without
+  counting it. The command runs with the project's environment variables and
+  your login shell's `PATH`. It runs with your rights, like any command the
+  agent runs — whoever may edit the flow may set it, as with the step's
+  prompts. The check only sees the exit code: an agent that edits the build
+  script or skips tests can still get past it. Works with **Claude** and
+  **Codex** agents (Codex not on Windows); other agents ignore it. Empty = no
+  check.
+- **Run guardrails** — on for every step unless you switch them off (see
+  below).
+
+A run is unattended, usually with every tool call auto-approved, so with
+**Claude** and **Codex** the app checks each tool call before it runs and
+refuses what an unattended run must not do:
+
+- `git push` and `git tag` (listing tags is fine), and `git reset --hard` onto
+  the main branch or outside the ticket's worktree — in the shell as well as
+  through the MCP tools (`git_push`, `git_tag`, `git_delete_remote_branch`,
+  `git_reset`),
+- running the project's deploy scripts (anything in `deploy/`, `run-cloud.sh`),
+- moving, editing, archiving, backlogging or deleting **another** ticket than the one the run
+  is working on (its id, `#key` and number all count as its own),
+- writing a file outside the ticket's worktree, when the ticket has one,
+- removing the ticket's own worktree (`git_worktree_remove`).
+
+The agent is told why and carries on without the action; the refusal shows up
+in the flow's **Log** as *Guardrail refused a tool*, with the tool, a short
+version of what it tried and the rule. In the **default** permission mode a
+refused call is never put to you as a permission question. Ordinary chats,
+the other agents (Gemini, Copilot, Opencode, LM Studio) and a step with the
+guardrails switched off behave as before. A step that has to do one of these
+things on purpose — a merge step that removes its own worktree, say — needs
+the guardrails switched off in its settings; the step then shows *no
+guardrails*. The guardrails catch an agent's mistakes, they are no sandbox: a
+file written through the shell, or a script that pushes inside, gets through,
+and so does everything when the app cannot be reached.
 
 Use **Start**, **Stop** and **Reset** to control the run:
 
 - **Start** begins the flow, or resumes it after a Stop at the first unfinished
-  ticket.
+  ticket. A ticket that has already talked to the agent is picked up where it
+  is: its chat gets a new message that says which column the ticket is in and
+  what the step waits for, followed by the ticket's text, and the turn runs with
+  the skill (or persona) of that column's prompt — the phase the board is at,
+  not the start again. A ticket that is already in the column the step waits
+  for counts as done and nothing is sent.
 - **Stop** cancels the turns that are in flight and dispatches nothing more;
-  those tickets go back to waiting.
+  those tickets go back to waiting, and whatever their chats had queued is
+  dropped so it cannot run ahead of the ticket when the flow resumes. (Stop in
+  a single ticket's chat is different: only that ticket stops, see **Waiting
+  for you · stopped** below.)
 - **Reset** puts every ticket back to waiting. The chat sessions and their
   messages are kept, so the record of what the flow did stays in Chat.
 
@@ -263,6 +382,18 @@ waiting and the run ends once the current one is done.
 Rename a flow from the ⋮ on its row; rename a step by clicking its title in the
 step header and typing over it (Enter saves, Escape puts the old one back).
 
+**Archiving a flow.** A finished run you want to keep but not see every day —
+Phase 1, Phase 2… — goes away with **Archive flow** in the ⋮ on its row. It
+leaves the list of flows and shows up under **Archived (N)** below it, with its
+steps, tickets and log intact. An archived flow opens read-only: it has no
+Start, Stop or Reset, and its steps and tickets cannot be changed or added to.
+**Restore from archive** (in its header, or in the ⋮) brings it back to its
+old place in the list. A running flow cannot be archived — stop it first; a
+flow waiting for the token limit is stopped by archiving it, and its scheduled
+restart goes. A scheduled task that starts an archived flow fails until the
+flow is restored. When the manager opens on its own it never picks an archived
+flow; it takes the first flow that is not.
+
 Start, Stop and Reset are the whole run; a single ticket has a ⋮ of its own on
 its card:
 
@@ -270,14 +401,17 @@ its card:
   you did yourself. A ticket the agent is working on right now has its turn
   cancelled first.
 - **Take out of the run** — the run passes the ticket by, the way it passes by
-  one that was archived off the board. The rest of the step carries on.
+  an archived one. The rest of the step carries on.
 - **Put back into the run** — the ticket goes back to waiting and the run picks
   it up again. A step and a flow that had already called themselves finished
-  reopen for it, so press **Start** if the run was over.
+  reopen for it, so press **Start** if the run was over. An archived ticket has
+  to be restored first (the ✎ on its card opens it, and its ⋮ has **Unarchive**).
 
 The flow's own menu (the ⋮ on its row) also has **Log** — what the run did, newest
 first: when it was started, stopped or reset, which ticket went to the agent
-and into which chat session, and what failed. A reset is logged too, so the
+and into which chat session, which agent was reminded of the done column (and
+how many times), which tool the agent asked permission for and what the answer
+was (allowed, denied, or no answer), and what failed. A reset is logged too, so the
 counters going back to zero is never a mystery. Each flow keeps its last 500
 entries.
 
@@ -288,14 +422,29 @@ have reset. You can postpone, disable or delete that task, or press Start
 yourself — doing so removes the scheduled one. After five waits with no
 success the flow gives up and fails.
 
-Moving a ticket to the **backlog** or **archive** takes it out of every flow it
-was in — a plan made of tickets that are not on the board is one you cannot
-reason about. Bringing the ticket back does not put it into the flow again.
-A ticket the agent is working on right now is the exception: it stays until
-that run finishes, so archiving never cancels work silently.
+With Claude the app does not have to guess from the error text: Claude tells it
+why a turn ended on an API error. A spent limit or billing problem parks the
+flow as above. An **overloaded API** parks it too, but only for a minute at
+first (then 2, 5 and 10), because it is usually back soon; the log says
+"Agent's API overloaded" rather than "Out of tokens". A failed login fails the
+ticket. Waits for the limit and for an overload count together towards the five
+attempts.
+
+Moving a ticket to the **backlog** or to another board takes it out of every
+flow it was in — a plan made of tickets that are not on the board is one you
+cannot reason about. Bringing the ticket back does not put it into the flow
+again. A ticket the agent is working on right now is the exception: it stays
+until that run finishes, so a move never cancels work silently.
+
+**Archiving** a ticket keeps it in its flows — from the board, with a bulk
+action or by archiving its chat. Tickets are mostly archived once they are
+done, and the run keeps the record of what it did with them: the card stays in
+its step with its state and an **Archived** label. A ticket the run has not got
+to yet is skipped when it does (an archived ticket is not run); restore it and
+put it back into the run to have it run after all.
 
 Every ticket and every step shows its state — waiting, working, done, failed or
-skipped (an archived or deleted ticket is skipped). A failed ticket stops the
+skipped (an archived or deleted ticket that is still waiting is skipped). A failed ticket stops the
 flow unless you turn that off for the flow. The flow never moves tickets
 between columns, so your board stays as you left it.
 
@@ -304,10 +453,41 @@ agent has finished its turn and the ticket has not reached the column, so
 nothing is running and the run cannot move until somebody puts it there — you,
 by dragging the card, or the agent from its own chat. The chip names the column
 it is waiting for. The ticket still holds its place in the step, so a sequential
-step will not start the next one behind its back.
+step will not start the next one behind its back. To send the agent on without
+typing "continue" into its chat, press **Continue** (▶) on the card — a failed
+ticket has it too. The ticket goes back in line and, while the flow runs, gets
+the same message as after a Stop: where it is, its text and its column's skill.
+
+If you press **Stop** in the chat of a ticket the flow is running, only that
+ticket stops: it says **Waiting for you · stopped** and the other tickets of
+the flow keep working. The stopped ticket holds its place in the step, so the
+run does not go past it — a sequential step does not start the next ticket and
+the next step does not begin — until you decide:
+
+- **Continue** (▶ on the card, or the first entry of its ⋮) sends the agent a
+  message in the same chat to carry on from where it was stopped, with the
+  ticket's text and its column's skill. The message is in the chat history.
+- **Continue (N)** in the run's header continues every ticket you stopped.
+- **Skip** or **Mark as done** in the card's ⋮ settle the ticket without
+  running it again, and the run goes on.
+- Typing into the ticket's chat yourself works too: the card turns to
+  **Working**, and when that turn ends the ticket is judged like any other.
+
+While nothing else in the run is working, the run itself says **Waiting for
+you · stopped**; otherwise a chip next to its state counts the stopped tickets.
+**Stop** in the run's header still stops the whole run, as before.
+
+When the agent runs with the **default** permission mode (Claude asks before
+using a tool), a ticket whose agent waits for your approval says **Waiting for
+approval**. Answer in the ticket's chat; the card goes back to **Working** and
+the run carries on. Without an answer the agent gives up on that tool after
+5 minutes and carries on without it. The ticket keeps its place in the step and
+counts as running: putting it back in the queue cancels the turn, and it cannot
+be moved or removed until the turn ends.
 
 In a big run, use the **Show:** row under the run controls to see only the
-tickets in some states — say **Failed** and **Waiting for you**. Each chip says
+tickets in some states — say **Failed**, **Waiting for you** and **Waiting for
+approval**. Each chip says
 how many tickets of the whole run are in that state; click one or more to
 filter, **Clear filter** to see everything again. The filter only hides cards:
 the step and flow progress still count every ticket, and as tickets change
@@ -394,10 +574,24 @@ While the agent is responding in a ticket's chat session, that ticket cannot be 
 
 ## Sync from Jira
 
-A board can follow a Jira instance: Jira sends a webhook on every issue change
-and TlyCode applies it to the board's cards. It is set up in **Settings →
-Kanban** ([Settings → Kanban](settings.md#kanban)), separately for each board,
-and works in the desktop app and in server mode (not in the cloud edition).
+A board can follow a Jira instance: issue changes come over to TlyCode and
+show up on the board's cards. Either Jira sends a **webhook** on every change,
+or TlyCode **polls** the Jira REST API itself with your API token (see
+[Webhook or API polling?](#webhook-or-api-polling)). It is set up in
+**Settings → Kanban** ([Settings → Kanban](settings.md#kanban)), separately for
+each board, and works in the desktop app and in server mode (not in the cloud
+edition).
+
+A board with a sync shows a **sync icon** next to the board switcher. Its
+tooltip lists the syncs with their method, whether they are on and the last
+error; the icon turns orange on an error and grey when every sync is off. A
+click opens Settings → Kanban on that board.
+
+A board can have **several syncs**, for example two Jira instances or two
+teams with different status mappings feeding one board. Each sync has its own
+name, sync method (webhook URL and secret, or Jira connection), switch,
+events, default column, status mapping and filters; see
+[Several syncs on one board](#several-syncs-on-one-board).
 
 What the sync does, each event behind its own checkbox:
 
@@ -413,11 +607,120 @@ What the sync does, each event behind its own checkbox:
 Only issues the sync created a card for are updated. Deliveries arriving twice
 or out of order are ignored.
 
-### Setting it up
+### Filters
 
-1. **In TlyCode**, open Settings → Kanban, pick the board, switch the sync on,
-   choose the events, the default column and the status mapping, and **Save**.
-   The first save creates the **webhook URL**: copy it.
+Three filters decide which issues get a card. They add up (an issue has to
+pass all that are set):
+
+| Filter | Lets through |
+|---|---|
+| **Only Jira projects** | Issues of the listed project keys (`LMS, SUP`). Empty = every project. |
+| **Only assignees** | Issues assigned to one of the listed users: one per line, as accountId, e-mail, user name or display name. In Jira Cloud the e-mail is often hidden, the **accountId** is reliable (it is in the URL of the user's profile). An unassigned issue does not pass. Empty = anyone. |
+| **Sprint** | *Any*, *Active sprint only*, or *Selected sprints only* (sprint names, one per line, in any state). An issue without a sprint passes only *Any*. TlyCode finds Jira's sprint field by itself, in Jira Cloud and Jira Server alike. |
+
+The assignee and sprint filters only decide about **new cards**:
+
+- **Coming into the filter creates the card.** An issue that did not pass when
+  it was created and passes later (it was assigned, added to the active sprint)
+  gets a card with its next update, provided **New issue** is ticked. The
+  card goes to the column of the issue's status (status mapping, then the
+  column of the same name), otherwise to the default column.
+- **Leaving the filter keeps the card.** It is not archived and keeps
+  following the issue (title, status, comments).
+
+For this to work Jira has to send **Issue updated** as well, and the JQL filter
+of the webhook must not drop the issues before they come into the TlyCode
+filter. Any update of a passing issue without a card creates one, so an issue
+that passed all along but was created before the webhook gets its card with its
+next change.
+
+### Webhook or API polling?
+
+Each sync picks its **Sync method**:
+
+| | Webhook | API polling |
+|---|---|---|
+| How | Jira posts every change to TlyCode's URL. | TlyCode asks Jira for changed issues every few minutes. |
+| Needs | Admin rights in Jira (to create the webhook) and a URL Jira can reach (tunnel on a desktop with Jira Cloud). | Your own API token (Jira Cloud) or Personal Access Token (Server / Data Center). No admin rights, no public URL. |
+| Delay | Seconds. | Up to the interval (1–60 minutes, 5 by default). |
+
+Pick the webhook when you administer Jira and TlyCode is reachable from it;
+otherwise API polling. The events, default column, status mapping, filters
+and column prompts work the same way in both.
+
+### Setting up API polling
+
+1. **Get a token.**
+   - *Jira Cloud*: [Atlassian account → Security → API tokens](https://id.atlassian.com/manage-profile/security/api-tokens)
+     → **Create API token**. You also need the e-mail of that account.
+   - *Jira Server / Data Center*: your profile → **Personal Access Tokens** →
+     **Create token**. No e-mail.
+
+   The token sees what your account sees: the sync gets only issues you may
+   browse.
+2. **In TlyCode**, open Settings → Kanban, pick the board, **Add sync** (or
+   open an existing one) and switch **Sync method** to **API polling**. Fill
+   in:
+   - **Base URL**: `https://acme.atlassian.net`, or the address of your Jira
+     Server including its context path (`https://jira.acme.com/jira`).
+   - **E-mail**: Jira Cloud only; leave it empty for Server / Data Center.
+   - **API token**: after saving it is never shown again, only "Token saved
+     (…abcd)". Type a new one to change it, or **Remove token**.
+   - **API version**: v3 for Jira Cloud, v2 for older Jira (Server / Data
+     Center always uses v2).
+   - **Interval**: how often to ask, in minutes.
+   - **JQL** (optional): which issues to fetch, e.g. `project = LMS AND type
+     != Epic`. Empty = the **Only Jira projects** and **Sprint** filters
+     below make the query. The **Only assignees** filter always applies on
+     top of it; an `ORDER BY` is ignored.
+
+   When the project has the [Jira MCP preset](settings.md#mcp-servers) set
+   up, **Take from the Jira MCP preset** fills in the URL, e-mail, token and
+   version from it.
+3. **Test connection** logs in with what the form holds (unsaved changes too;
+   an empty token field uses the saved token) and shows who you are logged in
+   as and how many issues the query finds (for Jira Cloud sometimes "at
+   least N"). A failure says what is wrong: rejected token, missing
+   permission, no Jira at the URL, Jira not reachable.
+4. Switch the sync on and **Save**. Polling needs the URL and the token; a
+   switched-off sync can be saved without them.
+5. **Polling status** under the connection shows the last fetch, how many
+   issues it changed on the board, the last error and when the next fetch is due. **Sync
+   now** fetches right away (save your changes first). The card's header shows
+   the last fetch or its error.
+
+The webhook URL, the secret and the Webhook server card do not matter for a
+polling sync; the form hides the webhook parts in this mode.
+
+### How API polling behaves
+
+- **Start**: the first fetch only notes the time. Changes from then on come
+  over, existing issues do not, just like a new webhook. Changing the URL, the
+  JQL or the sync method starts over the same way.
+- Each fetch asks for the issues changed since the last one, with two minutes
+  of overlap so nothing falls between two fetches; the overlap changes
+  nothing on the board.
+- **Cards you move or rename stay** until the status or the summary really
+  changes in Jira. Fetching an issue again changes nothing and fires no column
+  prompt.
+- **Comments** follow Jira: new, edited and deleted ones. A deleted comment
+  shows up with the next change of its issue.
+- **Deleted issues** are checked at most once an hour. A card whose issue is
+  gone from Jira gets archived. Jira answers "not found" for an issue the token
+  may not see, too, so when every checked issue looks gone, nothing is
+  archived and the sync shows an error about the token's permissions.
+- **Errors** (rejected token, Jira down, rate limit) show on the sync and do
+  not hold up other syncs. After a rate limit the next fetch waits as long as
+  Jira asked.
+- Polling runs in the desktop app and in server mode, not in the cloud
+  edition, which has no Jira sync.
+
+### Setting up a webhook
+
+1. **In TlyCode**, open Settings → Kanban, pick the board and click **Add
+   sync**. Name it, switch it on, choose the events, the default column and
+   the status mapping, and **Save**. The first save creates the **webhook
+   URL**: copy it.
 2. **Make the URL reachable from Jira** (see below). Swap the host of the
    copied URL for that address and keep the path (`/webhooks/jira/<token>`).
 3. **In Jira** (Jira Cloud: *Settings → System → WebHooks → Create a
@@ -433,9 +736,9 @@ or out of order are ignored.
      the best place to narrow down what comes over; the **Only Jira projects**
      field in TlyCode is a coarse second filter by project key.
 4. **Check it**: create or change an issue. The **Webhook server** card in
-   Settings → Kanban shows the last delivery (HTTP status and result) and the
-   board's own last delivery appears under its URL. Jira's webhook page also
-   lists failed deliveries.
+   Settings → Kanban shows the last delivery (HTTP status, result and the sync
+   it went to), and each sync shows its own last delivery or error in its
+   header. Jira's webhook page also lists failed deliveries.
 
 ### Making the URL reachable
 
@@ -460,15 +763,70 @@ or out of order are ignored.
 **Generate a new token** when the URL may have leaked. The old URL stops
 working immediately, so update the webhook in Jira.
 
+### Several syncs on one board
+
+Settings → Kanban lists a board's syncs as collapsible cards. **Add sync**
+adds one; nothing is stored until its first **Save**, which also creates its
+webhook URL. In Jira, each sync gets a webhook of its own with its own URL.
+
+- A delivery uses only the settings of the sync whose URL it came to: its
+  events, default column, status mapping, filters and secret.
+- **Each sync keeps its own cards.** The same issue key arriving through two
+  syncs, say `ABC-1` from two Jira instances, gives two cards, and an update
+  through one sync never touches the other's card.
+- So keep the filters of syncs fed by **the same** Jira apart (different
+  projects, teams or assignees). An issue that passes the filters of two
+  syncs gets a card from each, and an issue reassigned from one team's sync
+  to the other's gets a second card there, while the first one stays.
+- **Delete sync** (behind a confirmation) stops its webhook URL at once and
+  forgets which cards it made. The cards stay on the board but are no longer
+  updated from Jira. Remove the webhook in Jira too.
+- A board that had a sync before keeps it as the sync named **Jira**, with
+  its URL and cards unchanged.
+
+### The sync log
+
+Every sync keeps a log. Open it with **Log** at the top of the sync in
+Settings → Kanban. The line next to the button sums up the last 24 hours:
+how many polls ran (or deliveries came), how many changed something on the
+board and how many failed.
+
+- **Webhook**: one line per delivery Jira sent, with what became of it:
+  *Applied* (what changed, e.g. the card moved from *To Do* to *In
+  Progress*), *Filtered* and why (project key, sprint / assignee filter, an
+  event that is switched off), *Unknown issue* (it has no card), *Sync
+  switched off*, *Duplicate / older* (Jira sent it twice or out of order) or
+  *Error*. A wrong signature or a body that is not a Jira delivery shows as an
+  error too. A delivery with an unknown token cannot be told apart from noise,
+  so it is not logged.
+- **API polling**: one entry per poll, with the issues it found, what it did
+  to them, the new cursor and how long it took, or why it failed (wrong
+  token, missing permission, rate limit, timeout). Expand it to see each
+  issue that changed a card or failed, with its JQL and cursor under
+  **Details**. Polls that find nothing are merged into one line ("12× without
+  changes"). Issues fetched again without a change only count in the poll's
+  summary.
+- Filter by **Errors**, **Applied** or **Filtered**, or by part of an issue
+  key. The card name opens the card on the board, the issue key opens the
+  issue in Jira.
+- **Clear log** deletes the sync's entries. Deleting the sync deletes its log
+  too.
+- Tokens, secrets and delivery bodies are never logged. The log keeps at most
+  1000 entries per sync, for 30 days; change that under **Sync logs** below
+  the syncs (on the server only an admin can).
+
+Agents read the same log with the MCP tool `get_jira_sync_log`.
+
 ### What it deliberately does not do
 
 - **One way only**: Jira → kanban. Moving a card, editing it or commenting on
   it in TlyCode changes nothing in Jira (an agent with the built-in Jira MCP
   server can do that).
 - **No backfill**: existing issues do not come over, only changes from the
-  moment the webhook exists.
+  moment the webhook exists (or polling starts).
 - Attachments, worklogs, sprints, links between issues, assignee, priority and
-  Jira's custom fields are not synced.
+  Jira's custom fields are not copied to the card (sprint and assignee only
+  filter which issues get one).
 - **Column prompts are off by default.** Turned on, every card the sync moves
   fires its column's prompt. A bulk move in Jira can start dozens of agents.
 
