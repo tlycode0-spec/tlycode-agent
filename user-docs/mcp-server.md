@@ -13,7 +13,7 @@ Each request must include the `X-Project-Path` header so the server knows which 
 
 ## Available Tools (60+)
 
-### Chat (9 tools)
+### Chat (10 tools)
 
 | Tool | Description |
 |---|---|
@@ -28,24 +28,61 @@ Each request must include the `X-Project-Path` header so the server knows which 
 | `search_chat_messages` | Find the messages of one session containing a text and return a snippet around each match, not the whole message |
 | `star_chat_session` | Star a session (it stays at the top of the session list) or remove the star with `starred: false` |
 | `rename_chat_session` | Rename a chat session |
+| `set_chat_session_agent` | Set a session's agent like the *Agent settings* dialog: CLI, model and, for LM Studio, the session's own context length (`context_length`, `0` = back to the setting), reasoning (`reasoning`: `default`, `off`, `on`, `low`, `medium`, `high`; `""` = back to the setting) and MCP servers and tools (`local_mcp`: a whole config in the format of the `agent_local_mcp` setting; `null` = back to the setting). Only the fields you pass change. The answer says which MCP selection a turn gets (`local_mcp_effective`) |
 
-### Kanban (12 tools)
+### Kanban (29 tools)
 
 | Tool | Description |
 |---|---|
 | `get_kanban_board` | Get the board with all columns and tickets |
-| `create_kanban_ticket` | Create a new ticket (title, description, system_prompt, skill, and optionally its `custom_fields`) |
-| `update_kanban_ticket` | Update ticket properties, including its custom fields (`custom_fields`, an object of field name → text; a name the project does not define becomes a field of that ticket alone; omit the argument and the fields stay as they are) |
+| `get_kanban_board_paginated` | The board with only the first tickets of each column, without descriptions — for big boards |
+| `get_column_tickets` | One column's tickets, page by page |
+| `get_kanban_ticket` | One ticket in full, by id or key (`#42`). Header values of the ticket's own MCP selection that are not just `${VAR}` show as `***`, here and in every other tool's answer |
+| `search_tickets` | Find tickets by title or key (optionally in descriptions too) across boards, backlog and archive |
+| `get_ticket_by_chat_session` | The ticket a chat session is linked to |
+| `get_backlog_tickets` | The backlog, page by page |
+| `get_archived_tickets` | The archive, page by page |
+| `create_kanban_ticket` | Create a new ticket (title, description, system_prompt, skill, and optionally its `custom_fields` and agent: `agent_cli`, `agent_model`, `agent_context_length`, `agent_reasoning`, `agent_local_mcp`) |
+| `patch_kanban_ticket` | Change only the ticket fields you send (title, description, system prompt, skill or persona, worktree, custom fields, agent); the rest stays as it is. A changed agent reaches the ticket's chat session now or before its next turn (`agent_applied`: `now` / `deferred`) |
+| `update_kanban_ticket` | Overwrite title, description, system prompt, skill and worktree at once (what you leave out is cleared — use `patch_kanban_ticket` for a partial change), including its custom fields (`custom_fields`, an object of field name → text; a name the project does not define becomes a field of that ticket alone; omit the argument and the fields stay as they are). The agent (`agent_*`) also stays unless you send it |
 | `move_kanban_ticket` | Move a ticket to a different column/position |
 | `reorder_kanban_tickets` | Set the order of one column's cards in a single call |
 | `delete_kanban_ticket` | Delete a ticket |
 | `archive_kanban_ticket` | Archive or unarchive a ticket |
 | `set_ticket_backlog` | Move a ticket to/from backlog |
+| `bulk_kanban_tickets` | Archive, backlog or restore several tickets at once |
+| `bulk_column_tickets` | Archive or backlog a whole column |
 | `create_ticket_chat_session` | Create a chat session from a ticket |
 | `link_ticket_chat` | Link a ticket to an existing chat session |
 | `create_kanban_column` | Create a new column |
+| `rename_kanban_column` | Rename a column |
+| `delete_kanban_column` | Delete an empty column (refused while any ticket, archived or in the backlog included, belongs to it) |
+| `reorder_kanban_columns` | Set the order of a board's columns |
+| `reorder_kanban_boards` | Set the order of the project's boards |
 | `create_ticket_comment` | Add a comment to a ticket |
 | `get_ticket_comments` | Get all comments for a ticket |
+| `update_ticket_comment` | Edit a comment |
+| `delete_ticket_comment` | Delete a comment |
+
+Listings other than `get_kanban_board` leave out ticket descriptions unless asked (`include_description`), so an agent does not have to load hundreds of kB to find one ticket.
+
+### Jira Sync (14 tools)
+
+| Tool | Description |
+|---|---|
+| `list_jira_sync_configs` | A project's Jira syncs and how they went lately |
+| `get_jira_sync_log` | A sync's log, newest first |
+| `create_jira_sync_config` | Add a sync to a board |
+| `save_jira_sync_config` | Change the sync settings you send; the rest stays |
+| `delete_jira_sync_config` | Delete a sync (its cards stay) |
+| `rotate_jira_sync_token` | New webhook token; copy the new URL from Settings → Kanban |
+| `jira_sync_test_connection` | Log in to Jira and try the search |
+| `jira_sync_poll_now` / `jira_sync_poll_status` | Poll right away / see the polling state |
+| `clear_jira_sync_log` | Empty a sync's log |
+| `jira_webhook_status` / `set_jira_webhook_listener` | The app-wide webhook listener (moving it is admin-only in the cloud and not available there) |
+| `get_jira_sync_log_settings` / `set_jira_sync_log_settings` | How long the sync logs are kept, app-wide |
+
+No tool ever returns the HMAC secret, the Jira API token or the webhook URL's token; they can only be written.
 
 ### Ticket Attachments (4 tools)
 
@@ -88,13 +125,30 @@ the job of the agent profile's skills. Beyond its order and modes, a step has
 these settings. `done_column` names the board column a ticket has to reach before the
 step counts it as finished — for boards whose columns send prompts of their
 own, where the first agent run is only the opening move. `enforce_done_column`
-(with `done_column`, Claude and Codex agents) keeps the agent from ending its
-turn while the ticket is still in the column it started in: it is reminded to
-move it, at most twice, and then the ticket fails at once. `gate_command`
-(Claude and Codex agents) is a check such as `cargo check` the app runs in the
-ticket's worktree whenever the agent wants to end its turn: while it fails the
-agent is sent back with its output, and after `gate_max_attempts` failures
-(default 3) the ticket fails. `pause_after` stops
+(with `done_column`) keeps the agent from ending its turn while the ticket is
+still in the column it started in: it is reminded to move it, at most twice,
+and then the ticket fails at once. `gate_command` is a check such as
+`cargo check` the app runs in the ticket's worktree whenever the agent ends its
+turn: while it fails the agent is sent back with its output, and after
+`gate_max_attempts` failures (default 3) the ticket fails. Claude and Codex get
+both within their turn; every other agent (LM Studio, Gemini, Copilot,
+OpenCode) gets them once its turn is over, as the next message in the same
+chat, marked *Step check*. `require_criteria` makes the step done only once
+every acceptance criterion of the ticket is met: the agent is sent back with the
+unmet ones (numbered, to tick off with `update_ticket_criterion`) the same way,
+at most `criteria_max_attempts` times (default 3), and then the ticket fails.
+With a `done_column` the criteria count only once the ticket is there; a ticket
+without criteria passes. `review` is an object that adds a reviewer agent:
+`{enabled, agent_cli, agent_model, context_length, reasoning, prompt,
+max_attempts, diff_base}`. After every turn that would finish the ticket (and a
+passing `gate_command`) another agent, `agent_cli` / `agent_model` (`''` = the
+project's; not `copilot`), judges the ticket, its criteria, the agent's last
+answers and the diff (`diff_base`: `default_branch` or `dispatch`). It only
+reads. The met criteria get ticked off. A failed review sends the agent the
+feedback as the next message, marked *Step check · reviewer*. After
+`max_attempts` failed reviews (default 3) the ticket fails. `prompt` replaces
+the default instructions. `update_flow_step` changes only the keys of `review`
+you send. `pause_after` stops
 the run once the step is done instead of starting the next one — the way to try
 a single step out — and a later start carries on from the step that follows.
 `prompt_profile` names an agent profile of the flow's project (`list_agent_profiles`) that replaces
@@ -146,7 +200,9 @@ built-in profile, which is read only.
 | Tool | Description |
 |---|---|
 | `send_prompt` | Send a prompt to a chat session with optional skill |
-| `run_ticket` | Run a ticket (sends description + system_prompt + skill/persona to the agent) |
+| `run_ticket` | Run a ticket (sends description + system_prompt + skill/persona to the agent); without `options` the ticket's remembered ones apply, else the project's defaults |
+| `get_ticket_run_defaults` | The project's default run options (`{options, custom}`) |
+| `set_ticket_run_defaults` | Set the project's default run options (same shape as `run_ticket.options`, without `steps`); `null` = the built-in default |
 
 ### Skills (9 tools)
 
@@ -270,3 +326,5 @@ When a project is loaded in TlyCode Agent, the MCP server is automatically added
 ```
 
 This means any Claude Code session running in the same project directory will automatically have access to all TlyCode Agent tools without any manual configuration.
+
+Besides its own server, TlyCode Agent adds **default MCP servers** to every project once — today **context7** (library documentation). Unlike `tlycode-agent`, a default server that you remove does not come back. See [Default MCP servers](./settings.md#default-mcp-servers).

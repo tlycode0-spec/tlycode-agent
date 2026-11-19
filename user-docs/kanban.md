@@ -121,6 +121,7 @@ elsewhere meanwhile: …** and lets you **Use theirs** or **Keep mine**.
 - **Open chat** — shown instead of **New session** once the ticket has a session: opens it. A ticket has at most one chat session.
 - **Details** (collapsible; the dialog remembers whether it is collapsed) — one `label | value` row per parameter; an empty value shows a grey *Add…*, click it to fill it in:
   - **Persona / skill** — attach a persona or a skill to use as context when running the ticket
+  - **Agent** — the agent the ticket's chat session runs with: CLI, model and, for LM Studio, context length, reasoning and its own MCP servers and tools. It opens the same dialog as *Agent settings* in the chat, titled *Agent settings of ticket #N*. Empty = *Project default*; **✕** goes back to it. See *The ticket's agent* below.
   - **Worktree** — the git worktree the ticket's session works in; **+** creates a new one
   - **Chat session** — the linked session (unlink it with the broken-link button), or link an existing one
   - **Custom fields** — metadata on the ticket, e.g. a Jira ticket number. Two kinds sit side by side:
@@ -134,7 +135,7 @@ On a narrow window the right column moves under the content and the whole
 dialog scrolls as one.
 
 **New ticket** — the same layout with the title and description open for
-typing. Acceptance criteria, attachments, comments and the chat session appear
+typing. The agent can be set right away. Acceptance criteria, attachments, comments and the chat session appear
 once the ticket exists. The status picks the column the ticket is created in. **Create** (or
 Ctrl/Cmd+Enter) creates it.
 
@@ -169,6 +170,33 @@ meet.
 Criteria stay with the ticket when it is archived or moved to the backlog,
 and are deleted with it.
 
+### Prompt queue
+
+A ticket can carry its work as steps written ahead of time — "1. read X and
+propose…", "2. change Y…", "3. run the tests…". A run sends them to the agent
+one after another, each as a turn of its own. Small local models (LM Studio)
+follow short, precise steps much better than one long task.
+
+- **Add** — type a step into *Add a step…* under the list (Markdown, several lines) and press Ctrl+Enter or *Add*.
+- **Edit** — click a step. Ctrl+Enter or a click outside saves it, Escape cancels. Saving an emptied step deletes it.
+- **Skill / persona** — each step can run under a skill or persona of its own (the picker under the step).
+- **Switch off** — the switch on the right keeps a step in the list but leaves it out of runs. Steps are numbered as they will be sent.
+- **Sees / Remember** — whether the step sees the whole chat, only the answer of the step before or nothing but its task, and whether it stays in the chat's memory. See [Capabilities → Steps](./capabilities.md#steps) for what each agent does with it.
+- **Kind** — *Add step ▾* adds a step by kind (prompt, capability, condition, loop, app, script); the chip of a step changes it. Only the fields of the step's kind show, and a step that cannot run is marked *Draft*. **Show answer** keeps a step's answer visible outside the run's folded group in the chat. See [Capabilities → Steps](./capabilities.md#steps).
+- **Reorder** — drag the handle on the left. **Delete** — the bin on the right.
+
+A step can also **run a capability** of the project's library
+([Capabilities](./capabilities.md)): *Add step ▾ → Capability* adds a step
+that runs it by reference (an edit of the capability counts the next time a
+run gets there), *Copy* puts its steps into the queue as they are now. The
+Run window names such steps.
+
+Every change is saved at once. A card with enabled steps shows a **Prompts N**
+chip, with a branch or loop icon when the queue has conditions or loops (the
+tooltip counts them). Agents edit the queue over MCP (`list_ticket_prompts`,
+`set_ticket_prompts`, `add_ticket_prompt`, `update_ticket_prompt`,
+`delete_ticket_prompt`, `reorder_ticket_prompts`).
+
 ### Session chips
 
 A card can also carry two chips computed from its linked chat session, so the numbers that decide whether to work in that session are visible at a glance instead of being typed into the description:
@@ -178,9 +206,45 @@ A card can also carry two chips computed from its linked chat session, so the nu
 
 Both are off until the project defines a ticket field whose source is the session (`session_tokens` or `session_hot` in `ticket_fields`), together with the two thresholds `session_hot_minutes` and `session_context_warn_tokens` — there is no screen for any of it, see [Settings](./settings.md#kanban). The chips refresh when a turn finishes; the hotness countdown ticks on its own.
 
+### The ticket's agent
+
+A ticket can name the agent its work runs with. The ticket's chat session gets it:
+
+- **when the session is created** — *New session*, *Run*, a flow step with its own session per ticket, a pipeline trigger's run;
+- **when you link an existing chat** to a ticket that has an agent;
+- **when the agent changes on the ticket.** If the agent is answering in the session at that moment, the running turn is not touched: the change waits and the session takes it before its next turn — the dialog says so. A change of CLI starts a new conversation with that CLI in the session (the chat messages stay).
+
+The ticket's own **MCP and tools** selection (LM Studio) travels the same way as the rest of its agent: the session gets a copy, and clearing it on the ticket sends the session back to the project's selection.
+
+**The last change wins.** Change the agent in the session's *Agent settings* after the ticket set it, and the ticket won't set it back — until its agent is changed on the ticket again. *Agent settings* says whether the session's agent was taken from its ticket. A pipeline node with its own agent sets it on the session when the pipeline runs, so it wins for that run.
+
+A flow step that runs every ticket in **one shared session** keeps that session's own agent: switching the CLI ticket by ticket would throw its conversation away each time.
+
+Cards of tickets with an agent of their own show an **Agent** chip (the model, or the CLI when no model is set). The cloud edition always runs its API agent, so the row is not shown there.
+
 ### Running a Ticket
 
-When a ticket has a description or system prompt, you can run it directly — **Run** in the ticket dialog (or the `run_ticket` MCP tool) sends the description as a prompt with the ticket's persona or skill into the ticket's chat session and opens the chat. A ticket has at most one session: Run uses the one it is linked to and creates it only when there is none. The prompt appears once in the chat history; it is not left in the message input (a text of your own in the input stays). The project's opening prompt goes with it only into a session nothing has been said in yet. Run is off while the agent is responding in the ticket's session.
+When a ticket has a description, a system prompt or steps in its prompt queue, you can run it directly. **Run** in the ticket dialog opens the *Run* window:
+
+- **Opening message** — what of the ticket goes into the first message: title and key, the ticket's system prompt, the description, custom fields, acceptance criteria (no / unmet only / all), comments (no / the last N / all), linked tickets (no / titles and keys / with their descriptions) and attachments (no / a list / a list plus the images as files of the message — images only on the desktop).
+- **Prompt queue** — whether to send the steps, and which of them.
+- **Note** — up to 500 characters that go **in front of every step** ("answer in Czech", "only the `src/` folder"). A small model forgets an instruction given once by the third step. Without a queue the note follows the opening message.
+- **Preview** — the first message exactly as it goes out (*All messages* shows the rest), and the **steps of the run** as a tree: the queue's steps, what a capability step runs, a condition's branches, a loop's body and cap, a step that cannot run marked. The token estimate (a quarter of the characters) is the first step's, since steps go one at a time; the largest step is named below it. With an LM Studio context length set for the ticket or its session, the first step is shown against it, with a warning from 80 % of it or of the largest step.
+
+The opening message goes out **together with the first step**; each further step is a message of its own, headed *Step k of N*. The steps go **one per turn**: the next step is queued only once the agent's turn on the one before has ended, and the answer to each step is kept as its result. A bar above the message box shows *Prompt queue: step k / N*. In the chat the run's steps **fold into one group**, and only its closing answer (and steps with *Show answer*) stay outside — see [Capabilities → Runs in the chat](./capabilities.md#runs-in-the-chat). **A failed step stops the run**, and the steps after it are not sent. The first message runs under its step's skill or persona, else the ticket's; later steps only under their own.
+
+- **Writing in between** — a message you type while a step runs goes out before the next step, which then waits for its own turn. Your turn does not count as a step.
+- **Stop** in the chat (or *Stop* on the bar) stops the run; **Continue** on the bar sends the step that was not finished, a failed one too. Clearing the queue stops it the same way.
+- **After a restart of the app** a run that was under way is shown as *cut short by a restart* and does not go on by itself. *Continue* picks it up; a step still waiting in the restored queue is sent once, not twice.
+- The run takes the steps as they were when it started: editing the ticket's queue while it runs, or before you continue it, changes nothing until the next Run.
+
+The choice is **remembered on the ticket**. **Shift+click** on Run (or Ctrl/Cmd+Shift+Enter in the dialog) runs right away with it, without the window. A ticket that never ran this way sends the **project's default run options**, set in **Settings → Kanban → Default ticket run options** (the same controls as the window, without picking steps). Without them it sends what it always did: its system prompt and description, followed by its enabled steps. The window's footer says where its options come from; **Reset to defaults** drops the ticket's own choice, so it follows the project's defaults again. Changing the defaults does not touch tickets that remember a choice of their own. Over MCP: `get_ticket_run_defaults` / `set_ticket_run_defaults`.
+
+A ticket has at most one session: Run uses the one it is linked to and creates it only when there is none. The project's opening prompt goes with the first message only into a session nothing has been said in yet. Run is off while the agent is responding in the ticket's session or a prompt queue runs there. The `run_ticket` MCP tool does the same, with the same choice as `options` (see [MCP server](../mcp-server.md)).
+
+**In the Flow Manager** a ticket with a prompt queue runs the same way, one step per turn, with the ticket's remembered choice (else the project's defaults). Its card stays *running* until the last step is done (or, with a done column, the ticket gets there), also while you write into its chat between two steps. The step checks (stop gate, step check, acceptance criteria, reviewer) judge the work only after the last step. A ticket stopped in its chat, failed in a step or cut short by a restart waits for you; continued, it goes on with the step it did not finish — not from the start. *Continue* on the chat's bar does the same while its flow runs; with the flow stopped, continue it with **Start** in the Flow Manager. Resetting the flow starts the queue over. A step that runs all its tickets in **one shared session** sends a ticket's steps as one message, numbered, since turns of several tickets cannot be told apart there.
+
+**Column prompts and the queue** — a run of the queue does not add the column's prompt text to its first message. When the agent moves the ticket while steps still wait, the column's prompt lines up behind them: the ticket's steps first, the column after.
 
 ## Search
 
@@ -293,8 +357,9 @@ Each step decides how its tickets run:
   after 2 reminders", instead of waiting an hour for you. A ticket the agent
   moves to any other column is let go: that column's prompt takes over, as it
   would without the switch. Off by default, because some runs are meant to wait
-  for you to move the card. Works with **Claude** and **Codex** agents (Codex
-  not on Windows); with other agents the switch does nothing.
+  for you to move the card. **Claude** and **Codex** get the reminder within
+  their turn; other agents (LM Studio, Gemini, Copilot, OpenCode) get it as the
+  next message in the chat once their turn is over.
 - **Step check** — a command such as `cargo check`, `cargo test -p x` or
   `npm run build`: the step's Definition of Done. Whenever the agent wants to
   end its turn, the app runs the command itself in the ticket's worktree (the
@@ -320,9 +385,70 @@ Each step decides how its tickets run:
   your login shell's `PATH`. It runs with your rights, like any command the
   agent runs — whoever may edit the flow may set it, as with the step's
   prompts. The check only sees the exit code: an agent that edits the build
-  script or skips tests can still get past it. Works with **Claude** and
-  **Codex** agents (Codex not on Windows); other agents ignore it. Empty = no
-  check.
+  script or skips tests can still get past it. **Claude** and **Codex** are
+  sent back within their turn; other agents get the output as the next message
+  in the chat, marked *Step check*. Empty = no check.
+- **Done only when every acceptance criterion is met** — the ticket's own
+  checklist (see *Acceptance criteria* above) becomes part of the step's
+  Definition of Done. When the agent ends its turn and the ticket still has
+  unmet criteria, it is sent back with their numbered list and told to meet
+  them and tick each off (`update_ticket_criterion`), or to say why one cannot
+  be met. It checks after the step check, and before **Enforce the done
+  column**. After **Max. returns for unmet criteria** (3 by default, 1–10) the
+  ticket fails with the list of what is still unmet.
+  - With a done column the criteria are checked only once the ticket is in
+    it. On the way through the other columns they usually cannot be met yet.
+  - A ticket without criteria passes, and the run log says so.
+  - Only the checklist is checked, not whether the work behind it is really
+    done.
+  - Moving the card yourself, or **Mark as done**, overrides the check. The run
+    log notes how many criteria were still unmet.
+
+  While the run waits on such a ticket, its card shows an **Unmet 2 / 5** chip;
+  hover it to see which. Works with every agent: Claude and Codex within their
+  turn, the others as the next message, marked *Step check · acceptance
+  criteria*. Off by default.
+- **Reviewer agent** — a second opinion on the work. With **Have another agent
+  review the work** on, another agent judges each turn that would finish the
+  ticket, after the step check passed. It can be a different agent and model
+  than the one doing the work: **Change** picks its CLI and model, for
+  example Claude reviewing a step a local Gemma works on in LM Studio.
+  - The reviewer gets the ticket (title, description, system prompt), its
+    acceptance criteria, the agent's last answers since the run sent the
+    ticket (at most three), and the diff of the ticket's directory. **Diff
+    against** chooses the base: the merge base with the default branch, or the
+    commit checked out when the run sent the ticket. A ticket working on the
+    default branch itself is always diffed against the latter. Uncommitted and
+    new files count too. All of it is cut to fit the reviewer's context.
+  - It answers with a verdict: passed or not, why, and which criteria are met.
+    The app ticks the met criteria off. A criterion the agent ticked but the
+    reviewer finds unmet is unticked again. What you or Jira ticked stays.
+  - Passed: the step carries on as without the reviewer (the criteria check,
+    the done column). Not passed: the agent gets the reasons and what is
+    still to do as the next message in its chat, marked *Step check ·
+    reviewer*. After **Max. failed reviews** (3 by default) the ticket fails
+    with the reasons.
+  - **Review instructions** replace the default ones (empty = default). The
+    format of the verdict is added by the app, so your instructions cannot
+    break it.
+  - The reviewer only reads. It runs in its CLI's read-only mode. With Claude
+    and Codex the app also refuses its edits and every tool that changes
+    things. An LM Studio reviewer gets no MCP servers. If the files change
+    anyway during the review, the review counts as failed. Copilot has no
+    read-only mode and cannot review.
+  - The review runs in a chat of its own, *Review: #N …*. It is archived when
+    the ticket is done, and the next review takes it out again. The ticket's
+    card shows **Reviewing…**, **Review ✓** or **Review ✗**; click it to open
+    that chat. Its tokens are part of the run's statistics, with a line of
+    their own.
+  - A review that cannot be completed fails the ticket. That is the case when
+    there is no valid verdict even after asking again, when the reviewer's
+    turn fails, or after 20 minutes. Stopping the reviewer's turn in its chat
+    holds the ticket for you, like a Stop in the ticket's own chat. There is
+    no review after you stopped the agent's turn.
+  - With **Done only when every acceptance criterion is met** the criteria are
+    counted after the reviewer ticked them off. Claude and Codex then leave
+    them to the reviewer instead of checking them within the turn.
 - **Run guardrails** — on for every step unless you switch them off (see
   below).
 

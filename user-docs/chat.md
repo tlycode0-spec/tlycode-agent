@@ -81,6 +81,16 @@ Claude's response streams in real-time:
 - **Actions** — thinking blocks and tool calls are shown as collapsible sections
   - The collapse state is persisted per message — if you collapse an actions block, it stays collapsed across sessions
 
+## Capability Runs
+
+A ticket's prompt queue or a capability run from the **Capabilities** button
+goes one step per turn. Its steps fold into **one group** in the chat — a header
+with the run's name, how far it is (*step 2 / 4*, *item 3 of 10* inside a loop)
+and how many messages it holds; click it to unfold. The run's closing answer and
+the answers of steps marked *Show answer* stay outside the group. The bar above
+the message box stops and continues the run. See
+[Capabilities → Runs in the chat](./capabilities.md#runs-in-the-chat).
+
 ## Attachments
 
 Click the **paperclip icon** to attach files to your message:
@@ -132,6 +142,23 @@ When Claude makes code changes, a **Diff Review Panel** can display the changes 
 ## Session Continuity
 
 Each chat session maintains a Claude CLI session ID. When you reopen a session and send a new message, the conversation continues from where it left off (using `--resume`).
+
+## Agent Settings
+
+The robot button in the chat header opens **Agent settings** for the open session. They apply to this session only and win over the project's settings. The dialog has three tabs: **Agent** (CLI and model), **Model parameters** (reasoning, context length and edit strategy) and **MCP and tools**. The last two are for LM Studio only; with a CLI agent they are greyed out and the Agent tab says why.
+
+- **Agent CLI** and **model**: empty = the project default. Changing the CLI starts a new conversation with the agent (the chat messages stay).
+- **Context length** (LM Studio only): how many tokens the model's context window holds in this session. It overrides *Settings → Agent → LM Studio → Context length* (and in server mode your own or your group's value). Leave it empty, or press **Default**, to use the setting again. The presets 4k / 8k / 16k / 32k and *model max* fill it in. Below the field you can see the model's maximum and the context it is loaded with now. A value above the model's maximum can't be saved. If the model's maximum changes later, the turn uses the maximum and says so at the top of the answer.
+  - A new context length starts a new LM Studio conversation with the next message (the history is sent again, shaped by the context management), and LM Studio loads the model with the new length. Two sessions using the same model with different context lengths make LM Studio reload the model, or load a second copy, when you switch between them.
+  - The `ctx` chip under an answer shows the session's window.
+  - For CLI agents the context length comes from the model and can't be set here.
+- **Reasoning** (LM Studio only): overrides *Settings → Agent → LM Studio → Reasoning* for this session. *From the project settings* goes back to the setting, *Model default* sends nothing. Only the values the selected model offers are listed; for a model without a reasoning setting the field is disabled. The change takes effect with the next message and doesn't start a new conversation. See [Reasoning](./settings.md#lm-studio).
+- **Edit strategy** (LM Studio only, on the *Model parameters* tab): overrides *Settings → Agent → LM Studio → Edit strategy* for this session — *Automatic*, *Text replacement*, *Line anchors*, *By symbol*, *SEARCH/REPLACE blocks* or *Whole file*. *From the project settings* goes back to the setting. The change takes effect with the next message, which starts a new LM Studio conversation. A ticket's agent can set it too and passes it to the ticket's session. See [Edit strategy](./settings.md#lm-studio).
+- **MCP and tools** (LM Studio only): which MCP servers and tools the local agent gets in this session. *From the project* uses [MCP for the local agent](./settings.md#mcp-for-the-local-agent-lm-studio) as set in Settings → Integrations. *Own for this session* starts from a copy of the project's selection and shows the same editor: the built-in servers with their tool checklists, other servers, and the size of the selected tools. The size is rated against the context length chosen on the Model parameters tab, or the setting's when none is chosen. **Copy from the project** starts over from the project's selection. The session's own selection replaces the project's as a whole; it is not merged with it. Default servers such as context7 are added to it the same way as to the project's. Changes are stored with **Save**, and the next message starts a new LM Studio conversation with the new set of tools. A server's **Secret** header goes into an environment variable of the project right when you add the server, as it does in Settings.
+
+Agents can set the same values with the MCP tool `set_chat_session_agent` (`local_mcp` for the MCP selection, `null` = back to the project's).
+
+A ticket's session can get its agent from the ticket (see [The ticket's agent](./kanban.md#the-tickets-agent)). The dialog then says *Taken from ticket #N*, or which agent the ticket has when the session's differs. The last change wins: what you save here stays until the agent is changed on the ticket again.
 
 ## Session Tools Menu
 

@@ -12,6 +12,7 @@ TlyCode Agent is an AI-powered development assistant that integrates Claude AI w
 6. [Documentation](./docs.md)
 7. [Skills](./skills.md)
 8. [Pipelines](./pipelines.md)
+   - [Capabilities](./capabilities.md)
 9. [Scheduler](./scheduler.md)
 10. [Settings](./settings.md)
 11. [MCP Server](./mcp-server.md)
